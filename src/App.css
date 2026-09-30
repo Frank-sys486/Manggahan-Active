@@ -75,9 +75,6 @@ button:active:not(:disabled) { transform: scale(.97); }
 .landing-hero__bottom a:hover svg { transform: translateY(4px); }
 .landing-orbit { position: relative; z-index: 2; height: 125svh; margin-top: 0; color: var(--paper-bright); }
 .landing-orbit__scene { position: sticky; top: 0; height: 100svh; display: flex; align-items: center; justify-content: center; padding: 180px clamp(20px, 4vw, 64px) 90px; overflow: hidden; background: #061b18; pointer-events: auto; }
-.landing-orbit__heading { position: absolute; inset: clamp(28px, 5svh, 56px) clamp(20px, 4vw, 64px) auto; z-index: 10; display: flex; align-items: start; justify-content: space-between; gap: 24px; color: #fff; pointer-events: none; text-shadow: 0 2px 20px rgba(0,0,0,.4); }
-.landing-orbit__heading h2 { margin: 0; font: 800 clamp(3.8rem, 7vw, 6rem)/.79 var(--font-display); letter-spacing: -.025em; text-transform: uppercase; }
-.landing-orbit__heading p { margin: 4px 0 0; color: #fff; font-weight: 600; }
 .landing-orbit__canvas { position: absolute; inset: 0; }
 .landing-orbit__canvas canvas { display: block; width: 100%; height: 100%; }
 .landing-orbit__cards { width: min(100%, 1180px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1.4vw, 18px); }
@@ -89,8 +86,6 @@ button:active:not(:disabled) { transform: scale(.97); }
 .landing-orbit__core circle { fill: #fff; }
 .landing-orbit__title { position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; margin: 0; padding: 20px; color: #fff; font: 800 clamp(3rem, 8vw, 8rem)/.88 var(--font-display); text-align: center; text-transform: uppercase; text-wrap: balance; opacity: 0; visibility: hidden; pointer-events: none; }
 .landing-orbit__cursor { position: absolute; left: 0; top: 0; z-index: 11; padding: 12px 16px; color: #0a1612; background: #f2c94c; font: 800 .9rem/1 var(--font-display); text-transform: uppercase; white-space: nowrap; opacity: 0; visibility: hidden; pointer-events: none; }
-.landing-orbit__browse { position: absolute; left: clamp(20px, 4vw, 64px); bottom: 26px; z-index: 10; display: inline-flex; align-items: center; gap: 12px; min-height: 44px; color: #fff; font: 800 1rem/1 var(--font-display); text-transform: uppercase; pointer-events: auto; }
-.landing-orbit__browse:hover { color: #f2c94c; }
 .landing-orbit__card { position: relative; min-width: 0; height: clamp(130px, 25svh, 220px); display: block; padding: 0; color: var(--paper-bright); background: #17473f; border: 1px solid rgba(255,255,255,.26); text-align: left; overflow: hidden; box-shadow: 0 16px 32px rgba(0,0,0,.24); backface-visibility: hidden; transition: border-color var(--motion-standard) var(--motion-ease), box-shadow var(--motion-standard) var(--motion-ease); }
 .landing-orbit__card:hover, .landing-orbit__card:focus-visible { border-color: var(--mango); box-shadow: 0 20px 36px rgba(0,0,0,.34); }
 .landing-orbit__card:active { filter: brightness(1.13); }
@@ -99,7 +94,6 @@ button:active:not(:disabled) { transform: scale(.97); }
 .landing-orbit__label .sport-mark { flex: 0 0 auto; }
 .landing-orbit__label strong { flex: 1; font: 800 clamp(1.12rem, 1.65vw, 1.65rem)/.92 var(--font-display); text-transform: uppercase; }
 .landing-orbit__label > svg:last-child { flex: 0 0 auto; color: var(--mango); }
-.landing-orbit__disclaimer { position: absolute; right: clamp(20px, 4vw, 64px); bottom: 40px; z-index: 10; max-width: 42%; margin: 0; color: #fff; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-align: right; text-transform: uppercase; pointer-events: none; }
 .landing-sports, .landing-process { padding: clamp(74px, 9vw, 132px) clamp(20px, 4vw, 64px); }
 .landing-sports { position: relative; z-index: 2; background: var(--paper); }
 .landing-sports__intro { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); align-items: center; gap: clamp(28px, 5vw, 80px); margin-bottom: clamp(40px, 6vw, 86px); }
@@ -433,16 +427,12 @@ td { font-variant-numeric: tabular-nums; }
   .landing-hero h1 { font-size: clamp(2.55rem, 9vw, 4rem); }
   .landing-hero__bottom p { font-size: .8rem; }
   .landing-orbit__scene { padding: 180px 16px 90px; }
-  .landing-orbit__heading { align-items: start; flex-direction: column; gap: 6px; }
-  .landing-orbit__heading h2 { font-size: clamp(3rem, 11vw, 4.5rem); }
-  .landing-orbit__heading p { font-size: .78rem; }
   .landing-orbit__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .landing-orbit__card { height: clamp(88px, 17svh, 130px); }
   .landing-orbit__label { min-height: 37px; gap: 5px; padding: 5px 7px; }
   .landing-orbit__label .sport-mark { width: 18px; height: 18px; }
   .landing-orbit__label strong { font-size: clamp(.88rem, 3.2vw, 1.12rem); }
   .landing-orbit__label > svg:last-child { width: 15px; height: 15px; }
-  .landing-orbit__disclaimer { font-size: .6rem; }
   .landing-sports__intro { grid-template-columns: 1fr; gap: 30px; }
   .landing-court { height: clamp(220px, 58vw, 320px); }
   .landing-section-heading { align-items: start; flex-direction: column; gap: 20px; }
