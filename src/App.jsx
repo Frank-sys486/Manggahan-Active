@@ -292,6 +292,7 @@ function LandingOrbit({ onEnter }) {
       target.reveal = clamp((window.innerHeight - rect.top) / (window.innerHeight * 0.72))
       const settleStart = window.innerHeight * 0.55
       target.flat = clamp((-rect.top - settleStart) / Math.max(1, section.offsetHeight - scene.offsetHeight - settleStart))
+      scene.style.opacity = clamp(scene.getBoundingClientRect().bottom / window.innerHeight).toFixed(3)
       schedule()
     }
     const move = event => {
@@ -317,6 +318,7 @@ function LandingOrbit({ onEnter }) {
       window.removeEventListener('resize', measure)
       scene.removeEventListener('pointermove', move)
       scene.removeEventListener('pointerleave', leave)
+      scene.style.removeProperty('opacity')
     }
   }, [])
 
@@ -341,6 +343,22 @@ function LandingOrbit({ onEnter }) {
 function LandingPage({ onEnter }) {
   const processRef = useRef(null)
   const closeRef = useRef(null)
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const sections = [...document.querySelectorAll('.landing-sports, .landing-process, .landing-close')]
+    const fade = () => sections.forEach(section => {
+      section.style.opacity = Math.max(0, Math.min(1, section.getBoundingClientRect().bottom / Math.min(window.innerHeight, section.offsetHeight))).toFixed(3)
+    })
+    window.addEventListener('scroll', fade, { passive: true })
+    window.addEventListener('resize', fade)
+    fade()
+    return () => {
+      window.removeEventListener('scroll', fade)
+      window.removeEventListener('resize', fade)
+      sections.forEach(section => section.style.removeProperty('opacity'))
+    }
+  }, [])
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
