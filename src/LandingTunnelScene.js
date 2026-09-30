@@ -171,22 +171,6 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     panels.push(panel)
   }
 
-  const collageTiles = [[0, -8, 1], [3, 0, -1], [2, 8, 1]]
-  const collagePanels = collageTiles.map(([tile, x, y], index) => {
-    const panel = new THREE.Mesh(photoGeometry(tile), new THREE.MeshBasicMaterial({
-      map: atlasTexture,
-      color: atlasTexture ? 0xffffff : fallbackColors[tile],
-      side: THREE.DoubleSide,
-      transparent: true,
-      depthWrite: false,
-      toneMapped: false,
-    }))
-    panel.position.set(x * (compact ? 0.5 : 1), y * (compact ? 0.75 : 1), -10)
-    panel.rotation.y = (index - 1) * 0.12
-    scene.add(panel)
-    return panel
-  })
-
   const artifactGeometry = new THREE.IcosahedronGeometry(3.5, 2)
   const positions = artifactGeometry.attributes.position
   for (let i = 0; i < positions.count; i++) {
@@ -242,8 +226,6 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     camera.position.y += (pointer.y - camera.position.y) * 0.08
     camera.lookAt(0, 0, camera.position.z - 100)
     artifact.rotation.set(time * 0.07, time * 0.11, time * 0.035)
-    const collageOpacity = 1 - smoothstep(0.08, 0.34, state.progress)
-    collagePanels.forEach(panel => { panel.material.opacity = collageOpacity })
     maskMaterial.uniforms.uProgress.value = state.progress
     maskMaterial.uniforms.uOpacity.value = 1 - smoothstep(0.65, 0.8, state.progress)
     hero.style.setProperty('--landing-copy', (1 - smoothstep(0.08, 0.36, state.progress)).toFixed(3))
@@ -256,7 +238,6 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     if (!width || !height) return
     const narrow = width < 760
     panels.forEach((panel, index) => panel.position.set(poses[index][0] * (narrow ? 0.5 : 1), poses[index][1] * (narrow ? 0.75 : 1), poses[index][2]))
-    collagePanels.forEach((panel, index) => panel.position.set(collageTiles[index][1] * (narrow ? 0.5 : 1), collageTiles[index][2] * (narrow ? 0.75 : 1), -10))
     const trailScale = Math.min(1, 512 / Math.max(width, height))
     trailCanvas.width = Math.max(1, Math.round(width * trailScale))
     trailCanvas.height = Math.max(1, Math.round(height * trailScale))
@@ -350,7 +331,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     hero.removeEventListener('pointerleave', leave)
     hero.style.removeProperty('--landing-copy')
     root.classList.remove('landing-morph--ready')
-    for (const panel of [...panels, ...collagePanels]) { panel.geometry.dispose(); panel.material.dispose() }
+    for (const panel of panels) { panel.geometry.dispose(); panel.material.dispose() }
     artifactGeometry.dispose()
     artifactMaterial.dispose()
     maskGeometry.dispose()
