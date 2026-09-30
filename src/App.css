@@ -73,7 +73,7 @@ button:active:not(:disabled) { transform: scale(.97); }
 .landing-hero__bottom a:hover { color: var(--blue); }
 .landing-hero__bottom a svg { transition: transform var(--motion-standard) var(--motion-ease); }
 .landing-hero__bottom a:hover svg { transform: translateY(4px); }
-.landing-orbit { position: relative; z-index: 2; height: 170svh; color: var(--paper-bright); }
+.landing-orbit { position: relative; z-index: 2; height: 170svh; margin-top: -10svh; color: var(--paper-bright); }
 .landing-orbit__scene { position: sticky; top: 0; height: 100svh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 20px; padding: clamp(82px, 10svh, 112px) clamp(20px, 4vw, 64px) 26px; overflow: hidden; perspective: 1100px; background: #061b18; pointer-events: auto; }
 .landing-orbit__heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; opacity: var(--orbit-details, 1); transform: translateY(var(--orbit-details-rise, 0px)); }
 .landing-orbit__heading h2 { margin: 0; font: 800 clamp(3.8rem, 7vw, 6rem)/.79 var(--font-display); letter-spacing: -.025em; text-transform: uppercase; }
