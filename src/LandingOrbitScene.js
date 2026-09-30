@@ -26,7 +26,18 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#0A1612')
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 80)
-  camera.position.z = 14
+  camera.rotation.order = 'YXZ'
+  const wallGeometry = new THREE.CylinderGeometry(19, 19, 16, 64, 1, true)
+  const wallMaterial = new THREE.MeshBasicMaterial({ color: '#12291f', side: THREE.BackSide })
+  scene.add(new THREE.Mesh(wallGeometry, wallMaterial))
+  const rimGeometry = new THREE.TorusGeometry(18.95, 0.025, 6, 96)
+  const rimMaterial = new THREE.MeshBasicMaterial({ color: '#f2c94c', transparent: true, opacity: 0.18 })
+  for (const y of [-7.8, 7.8]) {
+    const rim = new THREE.Mesh(rimGeometry, rimMaterial)
+    rim.rotation.x = Math.PI / 2
+    rim.position.y = y
+    scene.add(rim)
+  }
   const imageAspect = (texture.image.width / 3) / (texture.image.height / 2)
   const geometries = sports.map((_, index) => {
     const geometry = new THREE.PlaneGeometry(imageAspect, 1)
@@ -40,7 +51,7 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     }
     return geometry
   })
-  // Jittered layers keep the cloud dense without leaving large random holes.
+  // Three staggered rows wrap the viewer; each card faces inward.
   const planes = Array.from({ length: 36 }, (_, index) => {
     const sport = index < sports.length ? index : Math.floor(Math.random() * sports.length)
     const plane = new THREE.Mesh(geometries[sport], new THREE.MeshBasicMaterial({
@@ -49,12 +60,19 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     }))
     plane.userData = {
       sport,
-      x: ((index % 6 + Math.random()) / 6 - 0.5) * 2.2,
-      y: ((Math.floor(index / 6) + Math.random()) / 6 - 0.5) * 2.1,
-      size: 0.13 + Math.random() * 0.1,
+      angle: ((index % 12 + (Math.random() - 0.5) * 0.65) / 12) * Math.PI * 2,
+      height: (Math.floor(index / 12) - 1) * 4.3 + (Math.random() - 0.5) * 0.9,
+      radius: 13.5 + Math.random() * 2.5,
+      size: 3.2 + Math.random() * 0.8,
     }
-    plane.position.z = -Math.random() * 18
-    plane.rotation.set((Math.random() - 0.5) * 0.12, (Math.random() - 0.5) * 0.35, (Math.random() - 0.5) * 0.18)
+    plane.position.set(
+      Math.sin(plane.userData.angle) * plane.userData.radius,
+      plane.userData.height,
+      -Math.cos(plane.userData.angle) * plane.userData.radius,
+    )
+    plane.lookAt(0, plane.userData.height, 0)
+    plane.rotateZ((Math.random() - 0.5) * 0.12)
+    plane.scale.setScalar(plane.userData.size)
     scene.add(plane)
     return plane
   })
@@ -67,6 +85,7 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   let cursorEnabled = false
   let visible = false
   let disposed = false
+  let scrollYaw = 0
 
   const highlight = plane => {
     if (plane === hovered) return
@@ -138,12 +157,6 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     camera.updateProjectionMatrix()
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, width < 760 ? 1.25 : 1.5))
     renderer.setSize(width, height, false)
-    planes.forEach(plane => {
-      const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.position.z - plane.position.z)
-      plane.position.x = plane.userData.x * viewHeight * camera.aspect / 2
-      plane.position.y = plane.userData.y * viewHeight / 2
-      plane.scale.setScalar(viewHeight * plane.userData.size)
-    })
     scene.updateMatrixWorld(true)
     leave()
     renderer.render(scene, camera)
@@ -151,9 +164,8 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   const tick = (_, delta) => {
     if (!visible || document.hidden) return
     const ease = 1 - Math.exp(-Math.min(delta, 64) / 160)
-    camera.position.x += ((pointerInside ? pointer.x * Math.min(2.2, camera.aspect * 1.5) : 0) - camera.position.x) * ease
-    camera.position.y += ((pointerInside ? pointer.y * 1.2 : 0) - camera.position.y) * ease
-    // Keep the camera facing forward so translation reveals real depth parallax.
+    camera.rotation.y += (scrollYaw - (pointerInside ? pointer.x * 0.55 : 0) - camera.rotation.y) * ease
+    camera.rotation.x += ((pointerInside ? pointer.y * 0.22 : 0) - camera.rotation.x) * ease
     if (pointerInside) highlight(pick())
     renderer.render(scene, camera)
   }
@@ -161,6 +173,12 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     visible = entry.isIntersecting
     if (!visible) leave()
   })
+  const scroll = () => {
+    const section = host.closest('.landing-orbit')
+    const travel = Math.max(1, section.offsetHeight - host.offsetHeight)
+    scrollYaw = Math.max(0, Math.min(1, -section.getBoundingClientRect().top / travel)) * Math.PI * 2
+    leave()
+  }
   const resizeObserver = new ResizeObserver(resize)
   const contextLost = event => { event.preventDefault(); dispose() }
   const dispose = () => {
@@ -173,12 +191,16 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     canvas.removeEventListener('pointerleave', leave)
     canvas.removeEventListener('click', click)
     canvas.removeEventListener('webglcontextlost', contextLost)
-    window.removeEventListener('scroll', leave)
+    window.removeEventListener('scroll', scroll)
     gsap.killTweensOf([logo, title, cursor, ...planes.map(plane => plane.material)])
     cursorX.tween.kill()
     cursorY.tween.kill()
     geometries.forEach(geometry => geometry.dispose())
     planes.forEach(plane => plane.material.dispose())
+    wallGeometry.dispose()
+    wallMaterial.dispose()
+    rimGeometry.dispose()
+    rimMaterial.dispose()
     texture.dispose()
     renderer.dispose()
     canvas.remove()
@@ -189,10 +211,11 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   canvas.addEventListener('pointerleave', leave)
   canvas.addEventListener('click', click)
   canvas.addEventListener('webglcontextlost', contextLost)
-  window.addEventListener('scroll', leave, { passive: true })
+  window.addEventListener('scroll', scroll, { passive: true })
   observer.observe(host)
   resizeObserver.observe(host)
   resize()
+  scroll()
   host.classList.add('is-gallery-ready')
   gsap.ticker.add(tick)
   return dispose
