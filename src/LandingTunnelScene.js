@@ -39,7 +39,7 @@ const fragmentShader = `
     return mix(blob, texture2D(uMaskTexture, uv).a, uHasTexture);
   }
 
-  float hash(vec2 p) {
+  float hash21(vec2 p) {
     vec3 p3 = fract(vec3(p.xyx) * 0.1031);
     p3 += dot(p3, p3.yzx + 33.33);
     return fract((p3.x + p3.y) * p3.z);
@@ -58,17 +58,21 @@ const fragmentShader = `
     float shadow = max(0.0, inside - neighbors) * 0.7;
     float trail = texture2D(uTrailTexture, vUv).a * (1.0 - smoothstep(0.18, 0.45, uProgress));
     vec2 pixel = gl_FragCoord.xy;
-    float fineGrain = hash(floor(pixel * 0.75));
-    float clusterGrain = hash(floor(pixel / 6.0) + 17.0);
-    float grain = mix(fineGrain, clusterGrain, 0.35);
-    float density = smoothstep(0.03, 0.65, trail);
-    float particles = smoothstep(0.68, 0.90, grain) * density;
+    vec2 grainCell = pixel / 2.5;
+    vec2 cell = floor(grainCell);
+    vec2 jitter = vec2(hash21(cell + 1.7), hash21(cell + 9.2)) - 0.5;
+    float speck = 1.0 - smoothstep(0.12, 0.48, length(fract(grainCell) - 0.5 - jitter * 0.35));
+    float fineGrain = hash21(cell);
+    float coarseGrain = hash21(floor(pixel / 8.0) + 17.0);
+    float grain = mix(fineGrain, coarseGrain, 0.35);
+    float density = smoothstep(0.02, 0.70, trail);
+    float particles = speck * smoothstep(0.60, 0.86, grain) * density;
     float boundary = clamp(abs(inside - neighbors) * 3.0, 0.0, 1.0);
     float edgeDust = inside * boundary * particles;
-    float spray = (1.0 - inside) * particles * 0.42;
+    float spray = (1.0 - inside) * particles * 0.32;
     float rightLeg = inside * smoothstep(0.64, 0.72, uv.x) * smoothstep(0.20, 0.32, uv.y)
       * (1.0 - smoothstep(0.76, 0.82, uv.y)) * (1.0 - smoothstep(0.06, 0.28, uProgress));
-    rightLeg *= 1.0 - smoothstep(0.24, 0.72, trail) * smoothstep(0.48, 0.78, grain);
+    rightLeg *= 1.0 - smoothstep(0.16, 0.72, trail) * smoothstep(0.48, 0.80, grain) * speck;
     float alpha = clamp(1.0 - inside + shadow + rightLeg - edgeDust * 0.7, 0.0, 1.0) * uOpacity;
     gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), clamp(shadow + spray + rightLeg, 0.0, 1.0)), alpha);
   }
@@ -130,8 +134,8 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   const stampContext = stampCanvas.getContext('2d')
   if (stampContext) {
     const gradient = stampContext.createRadialGradient(32, 32, 0, 32, 32, 32)
-    gradient.addColorStop(0, 'rgba(255,255,255,0.07)')
-    gradient.addColorStop(0.35, 'rgba(255,255,255,0.035)')
+    gradient.addColorStop(0, 'rgba(255,255,255,0.045)')
+    gradient.addColorStop(0.35, 'rgba(255,255,255,0.018)')
     gradient.addColorStop(1, 'rgba(255,255,255,0)')
     stampContext.fillStyle = gradient
     stampContext.fillRect(0, 0, 64, 64)
@@ -235,7 +239,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     if (!width || !height) return
     const narrow = width < 760
     panels.forEach((panel, index) => panel.position.set(poses[index][0] * (narrow ? 0.5 : 1), poses[index][1] * (narrow ? 0.75 : 1), poses[index][2]))
-    const trailScale = Math.min(1, 512 / Math.max(width, height))
+    const trailScale = Math.min(1, (narrow ? 512 : 1024) / Math.max(width, height))
     trailCanvas.width = Math.max(1, Math.round(width * trailScale))
     trailCanvas.height = Math.max(1, Math.round(height * trailScale))
     trailPointer.active = false
@@ -264,8 +268,8 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     const dy = trailY - trailPointer.y
     const distance = Math.hypot(dx, dy)
     const velocity = trailPointer.active ? distance / Math.max(1, event.timeStamp - trailPointer.time) : 0
-    const radius = Math.min(trailCanvas.width, trailCanvas.height) * 0.04 + Math.min(18, velocity * 16)
-    const spacing = Math.max(1, 4 * trailCanvas.width / bounds.width)
+    const radius = Math.min(trailCanvas.width, trailCanvas.height) * 0.035 + Math.min(18, velocity * 16)
+    const spacing = 3 * trailCanvas.width / bounds.width
     const steps = trailPointer.active ? Math.max(1, Math.ceil(distance / spacing)) : 1
     for (let i = 1; i <= steps; i++) {
       const t = i / steps
