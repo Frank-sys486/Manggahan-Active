@@ -47,6 +47,14 @@ const fragmentShader = `
     return fract((p3.x + p3.y) * p3.z);
   }
 
+  float cloudNoise(vec2 p) {
+    vec2 cell = floor(p);
+    vec2 blend = fract(p);
+    blend = blend * blend * (3.0 - 2.0 * blend);
+    return mix(mix(hash21(cell), hash21(cell + vec2(1.0, 0.0)), blend.x),
+      mix(hash21(cell + vec2(0.0, 1.0)), hash21(cell + 1.0), blend.x), blend.y);
+  }
+
   void main() {
     float zoom = exp(log(12.0) * smoothstep(0.3, 0.7, uProgress));
     float aspect = uResolution.x / uResolution.y;
@@ -60,24 +68,35 @@ const fragmentShader = `
     float shadow = max(0.0, inside - neighbors) * 0.7;
     float hoverFade = 1.0 - smoothstep(0.18, 0.45, uProgress);
     float trail = texture2D(uTrailTexture, vUv).a * hoverFade;
+    vec2 pointerUv = anchor + (uPointer - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
+    float pointerInside = smoothstep(0.05, 0.25, shapeAt(pointerUv));
+    float pointerDistance = length((vUv - uPointer) * uResolution);
+    float hover = (1.0 - smoothstep(0.0, 58.0, pointerDistance)) * uHover * pointerInside * hoverFade;
+    float activity = max(hover, trail * 0.75);
+    float rightLeg = inside * smoothstep(0.64, 0.72, uv.x) * smoothstep(0.20, 0.32, uv.y)
+      * (1.0 - smoothstep(0.76, 0.82, uv.y)) * (1.0 - smoothstep(0.06, 0.28, uProgress));
+    if (activity < 0.005) {
+      float alpha = clamp(1.0 - inside + shadow + rightLeg, 0.0, 1.0) * uOpacity;
+      gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), clamp(shadow + rightLeg, 0.0, 1.0)), alpha);
+      return;
+    }
     vec2 pixel = gl_FragCoord.xy;
     vec2 grainCell = pixel / 2.5;
     vec2 cell = floor(grainCell);
     vec2 jitter = vec2(hash21(cell + 1.7), hash21(cell + 9.2)) - 0.5;
-    float speck = 1.0 - smoothstep(0.12, 0.48, length(fract(grainCell) - 0.5 - jitter * 0.35));
     float fineGrain = hash21(cell);
-    float coarseGrain = hash21(floor(pixel / 8.0) + 17.0);
+    float coarseGrain = cloudNoise(pixel / 18.0);
     float grain = mix(fineGrain, coarseGrain, 0.35);
-    vec2 pointerUv = anchor + (uPointer - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
-    float pointerInside = smoothstep(0.05, 0.25, shapeAt(pointerUv));
-    float pointerDistance = length((vUv - uPointer) * uResolution);
-    float hover = (1.0 - smoothstep(12.0, 82.0, pointerDistance)) * uHover * pointerInside * hoverFade;
-    float activity = max(hover, trail * 0.75);
-    float particles = speck * smoothstep(0.60, 0.86, grain) * smoothstep(0.03, 0.65, activity);
-    float whiteErosion = inside * clamp(smoothstep(0.30, 0.82, hover) + particles * 0.75, 0.0, 1.0);
-    float outsideDust = (1.0 - inside) * smoothstep(0.02, 0.30, neighbors) * particles * 0.65;
-    float rightLeg = inside * smoothstep(0.64, 0.72, uv.x) * smoothstep(0.20, 0.32, uv.y)
-      * (1.0 - smoothstep(0.76, 0.82, uv.y)) * (1.0 - smoothstep(0.06, 0.28, uProgress));
+    float speckRadius = mix(0.20, 0.47, fineGrain);
+    float speck = 1.0 - smoothstep(speckRadius * 0.45, speckRadius,
+      length(fract(grainCell) - 0.5 - jitter * 0.35));
+    float particles = speck * smoothstep(0.60, 0.86, grain)
+      * smoothstep(0.30, 0.75, coarseGrain) * smoothstep(0.03, 0.65, activity);
+    float insideEdge = smoothstep(0.04, 0.32, max(inside - neighbors, 0.0));
+    float outsideEdge = smoothstep(0.02, 0.27, max(neighbors - inside, 0.0));
+    float whiteErosion = clamp(inside * insideEdge * (particles * 0.75 + activity * coarseGrain * 0.10)
+      + rightLeg * particles * 0.45 + inside * particles * 0.20, 0.0, 0.85);
+    float outsideDust = outsideEdge * particles * 0.55;
     float alpha = clamp(1.0 - inside + shadow + rightLeg + whiteErosion, 0.0, 1.0) * uOpacity;
     float ink = clamp((shadow + rightLeg) * (1.0 - whiteErosion) + outsideDust, 0.0, 1.0);
     gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), ink), alpha);
@@ -221,16 +240,24 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   let hoverStrength = 0
   let active = true
   let elapsed = 0
-  const paintTrail = () => {
-    if (!trailContext || trailPointer.life === 0) return
+  let lastRenderTime = null
+  const paintTrail = delta => {
+    if (!trailContext || trailPointer.life === 0 || delta === 0) return
+    trailPointer.life = Math.max(0, trailPointer.life - delta)
+    if (trailPointer.life === 0) {
+      trailContext.clearRect(0, 0, trailCanvas.width, trailCanvas.height)
+      trailTexture.needsUpdate = true
+      return
+    }
     trailContext.globalCompositeOperation = 'destination-out'
-    trailContext.fillStyle = 'rgba(0,0,0,0.075)'
+    trailContext.fillStyle = `rgba(0,0,0,${1 - Math.pow(0.925, delta * 60)})`
     trailContext.fillRect(0, 0, trailCanvas.width, trailCanvas.height)
     trailContext.globalCompositeOperation = 'source-over'
-    trailPointer.life--
     trailTexture.needsUpdate = true
   }
   const render = time => {
+    const delta = lastRenderTime === null ? 1 / 60 : Math.max(0, time - lastRenderTime)
+    lastRenderTime = time
     camera.position.z = state.cameraZ
     camera.position.x += (pointer.x - camera.position.x) * 0.08
     camera.position.y += (pointer.y - camera.position.y) * 0.08
@@ -238,10 +265,10 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     artifact.rotation.set(time * 0.07, time * 0.11, time * 0.035)
     maskMaterial.uniforms.uProgress.value = state.progress
     maskMaterial.uniforms.uOpacity.value = 1 - smoothstep(0.65, 0.8, state.progress)
-    hoverStrength *= 0.9
+    hoverStrength *= Math.exp(-delta / 0.16)
     maskMaterial.uniforms.uHover.value = hoverStrength
     hero.style.setProperty('--landing-copy', (1 - smoothstep(0.08, 0.36, state.progress)).toFixed(3))
-    paintTrail()
+    paintTrail(delta)
     renderer.render(scene, camera)
   }
   const resize = () => {
@@ -281,7 +308,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     const dy = trailY - trailPointer.y
     const distance = Math.hypot(dx, dy)
     const velocity = trailPointer.active ? distance / Math.max(1, event.timeStamp - trailPointer.time) : 0
-    const radius = Math.min(trailCanvas.width, trailCanvas.height) * 0.035 + Math.min(18, velocity * 16)
+    const radius = Math.min(trailCanvas.width, trailCanvas.height) * 0.018 + Math.min(9, velocity * 7)
     const spacing = 3 * trailCanvas.width / bounds.width
     const steps = trailPointer.active ? Math.max(1, Math.ceil(distance / spacing)) : 1
     for (let i = 1; i <= steps; i++) {
@@ -291,7 +318,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
       trailContext.drawImage(stampCanvas, px - radius, py - radius, radius * 2, radius * 2)
     }
     trailTexture.needsUpdate = true
-    trailPointer.life = 90
+    trailPointer.life = 1.2
     trailPointer.x = trailX
     trailPointer.y = trailY
     trailPointer.time = event.timeStamp
