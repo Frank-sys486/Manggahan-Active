@@ -86,7 +86,6 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   let cursorEnabled = false
   let visible = false
   let disposed = false
-  let scrollYaw = 0
 
   const highlight = plane => {
     if (plane === hovered) return
@@ -173,7 +172,7 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   const tick = (_, delta) => {
     if (!visible || document.hidden) return
     const ease = 1 - Math.exp(-Math.min(delta, 64) / 95)
-    camera.rotation.y += (scrollYaw - (pointerInside ? pointer.x * 0.7 : 0) - camera.rotation.y) * ease
+    camera.rotation.y += ((pointerInside ? -pointer.x * 0.7 : 0) - camera.rotation.y) * ease
     const sideways = pointerInside ? pointer.x * 1.8 : 0
     camera.position.x += (sideways * Math.cos(camera.rotation.y) - camera.position.x) * ease
     camera.position.z += (-sideways * Math.sin(camera.rotation.y) - camera.position.z) * ease
@@ -185,12 +184,6 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     visible = entry.isIntersecting
     if (!visible) leave()
   })
-  const scroll = () => {
-    const section = host.closest('.landing-orbit')
-    const travel = Math.max(1, section.offsetHeight - host.offsetHeight)
-    scrollYaw = Math.max(0, Math.min(1, -section.getBoundingClientRect().top / travel)) * Math.PI * 2
-    leave()
-  }
   const resizeObserver = new ResizeObserver(resize)
   const contextLost = event => { event.preventDefault(); dispose() }
   const dispose = () => {
@@ -203,7 +196,6 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     canvas.removeEventListener('pointerleave', leave)
     canvas.removeEventListener('click', click)
     canvas.removeEventListener('webglcontextlost', contextLost)
-    window.removeEventListener('scroll', scroll)
     gsap.killTweensOf([logo, title, cursor, ...planes.map(plane => plane.material), ...planes.map(plane => plane.scale)])
     cursorX.tween.kill()
     cursorY.tween.kill()
@@ -223,11 +215,9 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   canvas.addEventListener('pointerleave', leave)
   canvas.addEventListener('click', click)
   canvas.addEventListener('webglcontextlost', contextLost)
-  window.addEventListener('scroll', scroll, { passive: true })
   observer.observe(host)
   resizeObserver.observe(host)
   resize()
-  scroll()
   host.classList.add('is-gallery-ready')
   gsap.ticker.add(tick)
   return dispose
