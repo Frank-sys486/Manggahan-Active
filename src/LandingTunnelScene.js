@@ -28,6 +28,8 @@ const fragmentShader = `
   uniform float uHasTexture;
   uniform float uProgress;
   uniform float uOpacity;
+  uniform float uHover;
+  uniform vec2 uPointer;
   uniform vec2 uResolution;
   varying vec2 vUv;
 
@@ -56,7 +58,8 @@ const fragmentShader = `
     float neighbors = (shapeAt(uv + vec2(edge.x, 0.0)) + shapeAt(uv - vec2(edge.x, 0.0))
       + shapeAt(uv + vec2(0.0, edge.y)) + shapeAt(uv - vec2(0.0, edge.y))) * 0.25;
     float shadow = max(0.0, inside - neighbors) * 0.7;
-    float trail = texture2D(uTrailTexture, vUv).a * (1.0 - smoothstep(0.18, 0.45, uProgress));
+    float hoverFade = 1.0 - smoothstep(0.18, 0.45, uProgress);
+    float trail = texture2D(uTrailTexture, vUv).a * hoverFade;
     vec2 pixel = gl_FragCoord.xy;
     vec2 grainCell = pixel / 2.5;
     vec2 cell = floor(grainCell);
@@ -65,16 +68,19 @@ const fragmentShader = `
     float fineGrain = hash21(cell);
     float coarseGrain = hash21(floor(pixel / 8.0) + 17.0);
     float grain = mix(fineGrain, coarseGrain, 0.35);
-    float density = smoothstep(0.02, 0.70, trail);
-    float particles = speck * smoothstep(0.60, 0.86, grain) * density;
-    float boundary = clamp(abs(inside - neighbors) * 3.0, 0.0, 1.0);
-    float edgeDust = inside * boundary * particles;
-    float spray = (1.0 - inside) * particles * 0.32;
+    vec2 pointerUv = anchor + (uPointer - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
+    float pointerInside = smoothstep(0.05, 0.25, shapeAt(pointerUv));
+    float pointerDistance = length((vUv - uPointer) * uResolution);
+    float hover = (1.0 - smoothstep(12.0, 82.0, pointerDistance)) * uHover * pointerInside * hoverFade;
+    float activity = max(hover, trail * 0.75);
+    float particles = speck * smoothstep(0.60, 0.86, grain) * smoothstep(0.03, 0.65, activity);
+    float whiteErosion = inside * clamp(smoothstep(0.30, 0.82, hover) + particles * 0.75, 0.0, 1.0);
+    float outsideDust = (1.0 - inside) * smoothstep(0.02, 0.30, neighbors) * particles * 0.65;
     float rightLeg = inside * smoothstep(0.64, 0.72, uv.x) * smoothstep(0.20, 0.32, uv.y)
       * (1.0 - smoothstep(0.76, 0.82, uv.y)) * (1.0 - smoothstep(0.06, 0.28, uProgress));
-    rightLeg *= 1.0 - smoothstep(0.16, 0.72, trail) * smoothstep(0.48, 0.80, grain) * speck;
-    float alpha = clamp(1.0 - inside + shadow + rightLeg - edgeDust * 0.7, 0.0, 1.0) * uOpacity;
-    gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), clamp(shadow + spray + rightLeg, 0.0, 1.0)), alpha);
+    float alpha = clamp(1.0 - inside + shadow + rightLeg + whiteErosion, 0.0, 1.0) * uOpacity;
+    float ink = clamp((shadow + rightLeg) * (1.0 - whiteErosion) + outsideDust, 0.0, 1.0);
+    gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), ink), alpha);
   }
 `
 
@@ -148,6 +154,8 @@ function makeTunnel(root, maskTexture, atlasTexture) {
       uHasTexture: { value: maskTexture ? 1 : 0 },
       uProgress: { value: 0 },
       uOpacity: { value: 1 },
+      uHover: { value: 0 },
+      uPointer: { value: new THREE.Vector2(-1, -1) },
       uResolution: { value: new THREE.Vector2(1, 1) },
     },
     vertexShader,
@@ -210,6 +218,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   const state = { progress: 0, cameraZ: 15 }
   const pointer = { x: 0, y: 0 }
   const trailPointer = { x: 0, y: 0, time: 0, active: false, life: 0 }
+  let hoverStrength = 0
   let active = true
   let elapsed = 0
   const paintTrail = () => {
@@ -229,6 +238,8 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     artifact.rotation.set(time * 0.07, time * 0.11, time * 0.035)
     maskMaterial.uniforms.uProgress.value = state.progress
     maskMaterial.uniforms.uOpacity.value = 1 - smoothstep(0.65, 0.8, state.progress)
+    hoverStrength *= 0.9
+    maskMaterial.uniforms.uHover.value = hoverStrength
     hero.style.setProperty('--landing-copy', (1 - smoothstep(0.08, 0.36, state.progress)).toFixed(3))
     paintTrail()
     renderer.render(scene, camera)
@@ -261,6 +272,8 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     const y = clamp((event.clientY - bounds.top) / bounds.height)
     pointer.x = x - 0.5
     pointer.y = 0.5 - y
+    maskMaterial.uniforms.uPointer.value.set(x, 1 - y)
+    hoverStrength = 1
     const trailX = x * trailCanvas.width
     const trailY = y * trailCanvas.height
     if (!trailContext || !stampContext) return
@@ -311,6 +324,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
         active = self.isActive
         if (active) render(elapsed)
         else {
+          hoverStrength = 0
           trailPointer.active = false
           trailPointer.life = 0
           trailContext?.clearRect(0, 0, trailCanvas.width, trailCanvas.height)
