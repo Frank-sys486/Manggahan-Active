@@ -177,7 +177,7 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     const sideways = pointerInside ? pointer.x * 1.8 : 0
     camera.position.x += (sideways * Math.cos(camera.rotation.y) - camera.position.x) * ease
     camera.position.z += (-sideways * Math.sin(camera.rotation.y) - camera.position.z) * ease
-    camera.position.y += ((pointerInside ? pointer.y * 3.8 : 0) - camera.position.y) * ease
+    camera.position.y += ((pointerInside ? (hovered ? camera.position.y : pointer.y * 3.8) : 0) - camera.position.y) * ease
     if (pointerInside) highlight(pick())
     renderer.render(scene, camera)
   }
