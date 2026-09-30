@@ -49,7 +49,7 @@ button:active:not(:disabled) { transform: scale(.97); }
 
 .landing-page { min-height: 100dvh; background: var(--paper); }
 .landing-page a { color: inherit; text-decoration: none; }
-.landing-header { position: absolute; inset: 0 0 auto; z-index: 3; min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px clamp(20px, 3vw, 48px); color: var(--ink); background: transparent; }
+.landing-header { position: absolute; inset: 0 0 auto; z-index: 4; min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px clamp(20px, 3vw, 48px); color: var(--ink); background: transparent; }
 .landing-brand { display: inline-flex; align-items: center; gap: 13px; }
 .landing-brand__glyph { width: 49px; height: 43px; flex: 0 0 auto; }
 .landing-brand strong, .landing-brand small { display: block; }
@@ -61,7 +61,7 @@ button:active:not(:disabled) { transform: scale(.97); }
 .landing-header nav button svg { transition: transform var(--motion-standard) var(--motion-ease); }
 .landing-header nav button:hover svg { transform: translateX(4px); }
 .landing-intro { background: #061b18; }
-.landing-hero { position: relative; height: 100svh; background: var(--paper-bright); overflow: hidden; }
+.landing-hero { position: relative; z-index: 3; height: 100svh; background: var(--paper-bright); overflow: hidden; }
 .landing-morph { position: absolute; inset: 0; pointer-events: none; }
 .landing-morph canvas { width: 100%; height: 100%; display: block; }
 .landing-morph__fallback { position: absolute; left: 50%; top: 48%; width: min(76vw, 1120px, 100svh); aspect-ratio: 600 / 520; background: url('./assets/sports-atlas.jpg') center / cover; -webkit-mask: url('./assets/portal-logo-mask.svg') center / 100% 100% no-repeat; mask: url('./assets/portal-logo-mask.svg') center / 100% 100% no-repeat; transform: translate(-50%, -50%); }
