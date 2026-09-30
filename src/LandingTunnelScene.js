@@ -56,10 +56,10 @@ const fragmentShader = `
   }
 
   void main() {
-    float zoom = exp(log(12.0) * smoothstep(0.3, 0.7, uProgress));
+    float zoom = exp(log(12.0) * smoothstep(0.0, 0.7, uProgress));
     float aspect = uResolution.x / uResolution.y;
     float baseScale = min(1.001, aspect * 1.08);
-    vec2 anchor = mix(vec2(0.5), vec2(0.5, 1.0 - 340.0 / 520.0), smoothstep(0.28, 0.68, uProgress));
+    vec2 anchor = mix(vec2(0.5), vec2(0.5, 1.0 - 340.0 / 520.0), smoothstep(0.0, 0.68, uProgress));
     vec2 uv = anchor + (vUv - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
     float inside = shapeAt(uv);
     vec2 edge = vec2(3.0 / (baseScale * zoom * uResolution.y));
