@@ -1,0 +1,274 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-26T03:45:00Z",
+  "title": "Design System: Manggahan Active",
+  "extensions": {
+    "colorMeta": {
+      "court-green": {
+        "role": "primary",
+        "displayName": "Court Green",
+        "canonical": "#0d3c36",
+        "tonalRamp": ["#061b18", "#0a2c28", "#0d3c36", "#1c5851", "#3b7770", "#6d9b95", "#a8c5c1", "#e7f0ee"]
+      },
+      "court-green-deep": {
+        "role": "primary",
+        "displayName": "Deep Court Green",
+        "canonical": "#082f2b",
+        "tonalRamp": ["#041714", "#082521", "#0b342f", "#174b45", "#356c65", "#68958f", "#a4c1bd", "#e6efed"]
+      },
+      "score-paper": {
+        "role": "neutral",
+        "displayName": "Score Paper",
+        "canonical": "#f5f2e9",
+        "tonalRamp": ["#25231d", "#454138", "#656056", "#898278", "#aaa49a", "#c9c4bb", "#e3dfd6", "#f5f2e9"]
+      },
+      "bright-paper": {
+        "role": "neutral",
+        "displayName": "Bright Paper",
+        "canonical": "#fffdf8",
+        "tonalRamp": ["#282620", "#49463e", "#6b675e", "#908b82", "#b3aea6", "#d2cec7", "#ebe8e2", "#fffdf8"]
+      },
+      "deep-ink": {
+        "role": "neutral",
+        "displayName": "Deep Ink",
+        "canonical": "#092f35",
+        "tonalRamp": ["#04171a", "#08272c", "#0c3940", "#1d5259", "#3c7178", "#6d999f", "#a7c3c7", "#e6eff0"]
+      },
+      "soft-ink": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#3e5c5d",
+        "tonalRamp": ["#132021", "#273839", "#3e5354", "#577071", "#748e8f", "#97adae", "#becdce", "#e9efef"]
+      },
+      "mango-marker": {
+        "role": "secondary",
+        "displayName": "Mango Marker",
+        "canonical": "#f6b93b",
+        "tonalRamp": ["#332307", "#62450c", "#936916", "#c68e22", "#f6b93b", "#f9cb70", "#fbdda5", "#fff3d8"]
+      },
+      "action-blue": {
+        "role": "primary",
+        "displayName": "Action Blue",
+        "canonical": "#2367d1",
+        "tonalRamp": ["#071b40", "#0c347a", "#174ea9", "#2367d1", "#4b84e0", "#7ba6eb", "#b0c9f4", "#e7effd"]
+      },
+      "action-blue-deep": {
+        "role": "primary",
+        "displayName": "Deep Action Blue",
+        "canonical": "#174ea9",
+        "tonalRamp": ["#061735", "#0a2c65", "#124294", "#235db9", "#4d7bce", "#7da0e1", "#b2c7ef", "#e8effb"]
+      },
+      "basketball-wood": {
+        "role": "secondary",
+        "displayName": "Basketball Wood",
+        "canonical": "#c9ad7f",
+        "tonalRamp": ["#2a2115", "#50402a", "#755f40", "#9b7f58", "#bda172", "#cfb98f", "#dfcfb1", "#f2eadc"]
+      },
+      "badminton-green": {
+        "role": "secondary",
+        "displayName": "Badminton Green",
+        "canonical": "#1c5851",
+        "tonalRamp": ["#071d1a", "#0d3531", "#164c46", "#28675f", "#47857e", "#73a7a1", "#a9cac6", "#e4f0ee"]
+      },
+      "table-tennis-blue": {
+        "role": "secondary",
+        "displayName": "Table Tennis Blue",
+        "canonical": "#185a7b",
+        "tonalRamp": ["#061d29", "#0a354a", "#124d69", "#266a8b", "#4a88a8", "#77a9c3", "#adccda", "#e6f0f4"]
+      },
+      "volleyball-clay": {
+        "role": "secondary",
+        "displayName": "Volleyball Clay",
+        "canonical": "#8a4b35",
+        "tonalRamp": ["#2b130d", "#482218", "#673326", "#8a4b35", "#aa6b53", "#c58f7b", "#ddb8aa", "#f2e3dc"]
+      },
+      "tennis-green": {
+        "role": "secondary",
+        "displayName": "Tennis Green",
+        "canonical": "#3b6f4d",
+        "tonalRamp": ["#102319", "#1d3a29", "#2d563c", "#3b6f4d", "#5a8c69", "#80aa8d", "#adcbb5", "#e5f0e8"]
+      },
+      "sepak-orange": {
+        "role": "secondary",
+        "displayName": "Sepak Orange",
+        "canonical": "#a6632e",
+        "tonalRamp": ["#32190a", "#542b11", "#7b451d", "#a6632e", "#c48147", "#d9a273", "#e8c6a7", "#f6e8d8"]
+      },
+      "available-green": {
+        "role": "tertiary",
+        "displayName": "Available Green",
+        "canonical": "#14874e",
+        "tonalRamp": ["#052619", "#08482d", "#0d6a3f", "#14874e", "#3aa26d", "#70bd91", "#a9d8bb", "#e4f3e9"]
+      },
+      "limited-amber": {
+        "role": "tertiary",
+        "displayName": "Limited Amber",
+        "canonical": "#996200",
+        "tonalRamp": ["#2c1b00", "#543400", "#7a4d00", "#996200", "#bd8427", "#d6a95e", "#e9cea0", "#faf0d8"]
+      },
+      "booked-red": {
+        "role": "tertiary",
+        "displayName": "Booked Red",
+        "canonical": "#b8253b",
+        "tonalRamp": ["#35060f", "#650d1e", "#8f172b", "#b8253b", "#d74c60", "#e77f8d", "#f2b2ba", "#fbe7e9"]
+      },
+      "rule-line": {
+        "role": "neutral",
+        "displayName": "Rule Line",
+        "canonical": "rgba(9, 47, 53, 0.26)",
+        "tonalRamp": ["rgba(9,47,53,0.92)", "rgba(9,47,53,0.78)", "rgba(9,47,53,0.64)", "rgba(9,47,53,0.50)", "rgba(9,47,53,0.38)", "rgba(9,47,53,0.26)", "rgba(9,47,53,0.14)", "rgba(9,47,53,0.06)"]
+      },
+      "focus-blue": {
+        "role": "tertiary",
+        "displayName": "Focus Blue",
+        "canonical": "#7bb4ff",
+        "tonalRamp": ["#102b50", "#1d4f8c", "#3474c5", "#5799e8", "#7bb4ff", "#a3caff", "#c6ddff", "#ebf4ff"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Athletic Display", "purpose": "Major view titles and rare numeric focal points." },
+      "headline": { "displayName": "Facility Headline", "purpose": "Compact facility names and section anchors." },
+      "title": { "displayName": "Operational Title", "purpose": "Dates, booking facts, and strong rail values." },
+      "body": { "displayName": "Workhorse Body", "purpose": "Instructions, controls, descriptions, and data." },
+      "label": { "displayName": "Tracked Label", "purpose": "Eyebrows, metadata, and utility labels." }
+    },
+    "shadows": [
+      {
+        "name": "sticky-orientation-cue",
+        "value": "6px 0 12px rgba(8, 47, 43, 0.13)",
+        "purpose": "Only for a sticky row label overlapping horizontally scrolling content on small screens."
+      },
+      {
+        "name": "selected-inset",
+        "value": "inset 0 0 0 4px #f5f2e9",
+        "purpose": "Marks the selected scheduler slot without lifting it off the field."
+      }
+    ],
+    "motion": [
+      {
+        "name": "slot-state",
+        "value": "180ms ease-out",
+        "purpose": "Background, color, and inset-ring transitions for scheduler slots."
+      },
+      {
+        "name": "rail-settle",
+        "value": "240ms cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "One-time upward settle when reservation details replace the selection rail."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "Collapses animation and transition duration when reduced motion is requested."
+      }
+    ],
+    "breakpoints": [
+      { "name": "compact-desktop", "value": "1100px" },
+      { "name": "mobile", "value": "760px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single bright next action in a surface or operational region.",
+      "html": "<button class=\"ds-primary-button\" type=\"button\"><span>Reserve this slot</span><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14M14 7l5 5-5 5\"/></svg></button>",
+      "css": ".ds-primary-button { min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 14px; padding: 0 24px; color: #fff; background: var(--blue, #2367d1); border: 1px solid #fff; border-radius: 4px; font: 700 1rem/1.2 var(--font-body, 'Barlow', system-ui, sans-serif); cursor: pointer; } .ds-primary-button:hover { background: var(--blue-dark, #174ea9); } .ds-primary-button:active { transform: translateY(1px); } .ds-primary-button:focus-visible { outline: 3px solid var(--focus, #7bb4ff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Button",
+      "kind": "button",
+      "description": "An understated secondary action for back, browse, or cancellation paths.",
+      "html": "<button class=\"ds-text-button\" type=\"button\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m15 18-6-6 6-6\"/></svg>Back</button>",
+      "css": ".ds-text-button { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; color: var(--ink, #092f35); background: transparent; border: 0; font: 700 1rem/1.2 var(--font-body, 'Barlow', system-ui, sans-serif); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; } .ds-text-button:hover { color: var(--blue-dark, #174ea9); } .ds-text-button:focus-visible { outline: 3px solid var(--focus, #7bb4ff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Primary Navigation",
+      "kind": "nav",
+      "description": "Court-green icon-and-label navigation with a mango active rule.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Primary navigation\"><button class=\"ds-nav-item ds-is-active\" type=\"button\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M8 3v4M16 3v4M3 10h18\"/></svg>Schedule</button><button class=\"ds-nav-item\" type=\"button\">My reservations</button><button class=\"ds-nav-item\" type=\"button\">Staff view</button></nav>",
+      "css": ".ds-nav { min-height: 76px; display: flex; align-items: stretch; gap: 4px; padding: 0 12px; color: var(--paper, #f5f2e9); background: var(--court, #0d3c36); font-family: var(--font-body, 'Barlow', system-ui, sans-serif); overflow-x: auto; } .ds-nav-item { min-height: 76px; display: inline-flex; align-items: center; gap: 9px; padding: 0 18px; color: inherit; background: none; border: 0; border-bottom: 4px solid transparent; font-weight: 600; white-space: nowrap; cursor: pointer; } .ds-nav-item:hover { background: rgba(255,255,255,.08); } .ds-nav-item.ds-is-active { color: var(--mango, #f6b93b); border-color: var(--mango, #f6b93b); } .ds-nav-item:focus-visible { outline: 3px solid var(--focus, #7bb4ff); outline-offset: -4px; }"
+    },
+    {
+      "name": "Labeled Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "A compact bright-paper form field on a dark operational rail.",
+      "html": "<label class=\"ds-field-label\">Contact name<input class=\"ds-field\" value=\"Juan Dela Cruz\" aria-label=\"Contact name\" /></label>",
+      "css": ".ds-field-label { display: grid; gap: 7px; color: #eef5f2; background: var(--court, #0d3c36); padding: 14px; font: 600 .76rem/1.2 var(--font-body, 'Barlow', system-ui, sans-serif); } .ds-field { width: 100%; min-height: 46px; padding: 0 12px; color: var(--ink, #092f35); background: var(--paper-bright, #fffdf8); border: 1px solid transparent; border-radius: 3px; font: 400 1rem/1.3 var(--font-body, 'Barlow', system-ui, sans-serif); } .ds-field:hover { border-color: rgba(9,47,53,.26); } .ds-field:focus-visible { outline: 3px solid var(--focus, #7bb4ff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Role Selector",
+      "kind": "custom",
+      "description": "Square operational role controls for choosing player or administrator access on the login surface.",
+      "html": "<fieldset class=\"ds-role-selector\"><legend>Choose role</legend><label><input type=\"radio\" name=\"role\" checked><span>Player<small>Book and play</small></span></label><label><input type=\"radio\" name=\"role\"><span>Administrator<small>Manage facilities</small></span></label></fieldset>",
+      "css": ".ds-role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0; border: 0; color: var(--ink, #092f35); font-family: var(--font-body, 'Barlow', system-ui, sans-serif); } .ds-role-selector legend { grid-column: 1 / -1; margin-bottom: 10px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; } .ds-role-selector input { position: absolute; opacity: 0; } .ds-role-selector span { min-height: 76px; display: grid; align-content: center; padding: 16px; border: 1px solid rgba(9,47,53,.26); border-radius: 4px; cursor: pointer; font: 700 1.15rem/1 var(--font-display, 'Barlow Condensed', sans-serif); text-transform: uppercase; } .ds-role-selector small { margin-top: 6px; color: var(--ink-soft, #3e5c5d); font: 400 .77rem/1.2 var(--font-body, 'Barlow', system-ui, sans-serif); text-transform: none; } .ds-role-selector input:checked + span { color: var(--paper, #f5f2e9); background: var(--court, #0d3c36); border-color: var(--court, #0d3c36); box-shadow: inset 0 -4px 0 var(--mango, #f6b93b); } .ds-role-selector input:checked + span small { color: #d7e3df; } .ds-role-selector input:focus-visible + span { outline: 3px solid var(--focus, #7bb4ff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Confirmed Badge",
+      "kind": "chip",
+      "refersTo": "badge-confirmed",
+      "description": "A semantic record-status pill with a check mark and readable label.",
+      "html": "<span class=\"ds-badge-confirmed\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12 4 4L19 6\"/></svg>Confirmed</span>",
+      "css": ".ds-badge-confirmed { min-height: 36px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; color: #07572f; background: #d9f4df; border: 1px solid #60a774; border-radius: 999px; font: 700 1rem/1 var(--font-body, 'Barlow', system-ui, sans-serif); }"
+    },
+    {
+      "name": "Availability Marks",
+      "kind": "custom",
+      "description": "The fixed circle, triangle, and crossed-circle vocabulary for open, limited, and booked states.",
+      "html": "<div class=\"ds-status-set\"><span class=\"ds-status\"><i class=\"ds-status-open\" aria-hidden=\"true\"></i><b>Open</b></span><span class=\"ds-status\"><svg class=\"ds-status-limited\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.8\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 4 21 20H3Z\"/></svg><b>Limited</b></span><span class=\"ds-status\"><span class=\"ds-status-booked\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.8\" stroke-linecap=\"round\"><path d=\"m7 7 10 10M17 7 7 17\"/></svg></span><b>Booked</b></span></div>",
+      "css": ".ds-status-set { display: flex; flex-wrap: wrap; gap: 22px; padding: 16px; color: var(--ink, #092f35); background: var(--paper, #f5f2e9); font: 600 .86rem/1 var(--font-body, 'Barlow', system-ui, sans-serif); } .ds-status { display: inline-flex; align-items: center; gap: 8px; } .ds-status-open, .ds-status-limited, .ds-status-booked { width: 28px; height: 28px; flex: 0 0 auto; } .ds-status-open { display: block; border: 4px solid var(--open, #14874e); border-radius: 50%; } .ds-status-limited { color: var(--limited, #996200); } .ds-status-booked { display: inline-grid; place-items: center; color: #fff; background: var(--booked, #b8253b); border-radius: 50%; } .ds-status-booked svg { width: 21px; height: 21px; }"
+    },
+    {
+      "name": "Selected Court Slot",
+      "kind": "custom",
+      "refersTo": "slot-selected",
+      "description": "The signature selected state inside a sport-colored Courtline Scheduler lane.",
+      "html": "<button class=\"ds-slot-selected\" type=\"button\" aria-pressed=\"true\"><span class=\"ds-slot-open\" aria-hidden=\"true\"></span><span><strong>Selected</strong><small>6:00 PM – 7:00 PM</small></span></button>",
+      "css": ".ds-slot-selected { min-height: 150px; min-width: 150px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 14px; color: #fff; background: var(--blue, #2367d1); border: 0; box-shadow: inset 0 0 0 4px var(--paper, #f5f2e9); text-align: left; font-family: var(--font-body, 'Barlow', system-ui, sans-serif); cursor: pointer; transition: background-color 180ms ease-out, color 180ms ease-out, box-shadow 180ms ease-out; } .ds-slot-selected:hover { background: var(--blue-dark, #174ea9); } .ds-slot-selected:focus-visible { outline: 3px solid var(--focus, #7bb4ff); outline-offset: 3px; } .ds-slot-selected > span:last-child { display: grid; gap: 4px; } .ds-slot-selected strong { font: 700 1.15rem/1 var(--font-display, 'Barlow Condensed', 'Arial Narrow', sans-serif); text-transform: capitalize; } .ds-slot-selected small { font-size: .74rem; line-height: 1.3; } .ds-slot-open { width: 28px; height: 28px; flex: 0 0 auto; border: 4px solid #61d27f; border-radius: 50%; }"
+    },
+    {
+      "name": "Selection Rail",
+      "kind": "custom",
+      "description": "A court-green reservation summary rail with mango emphasis and one primary action.",
+      "html": "<aside class=\"ds-selection-rail\"><span class=\"ds-selection-label\">Selected slot</span><div><strong>Basketball Court A</strong><small>Indoor court · Full court</small></div><div><strong>6:00 PM – 7:00 PM</strong><small>Monday, September 28, 2026</small></div><button class=\"ds-rail-action\" type=\"button\">Reserve this slot</button></aside>",
+      "css": ".ds-selection-rail { position: relative; display: grid; grid-template-columns: 1.15fr 1.25fr auto; align-items: center; gap: 0; min-height: 114px; padding: 28px 32px 18px; color: var(--paper, #f5f2e9); background: var(--court, #0d3c36); border-top: 3px solid var(--mango, #f6b93b); font-family: var(--font-body, 'Barlow', system-ui, sans-serif); } .ds-selection-rail > div { display: grid; gap: 4px; padding: 0 24px; border-right: 1px solid rgba(255,255,255,.34); } .ds-selection-rail strong { font: 700 1.24rem/1 var(--font-display, 'Barlow Condensed', 'Arial Narrow', sans-serif); text-transform: uppercase; } .ds-selection-rail small { color: #d7e3df; font-size: .78rem; } .ds-selection-label { position: absolute; top: 9px; left: 32px; color: var(--mango, #f6b93b); font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; } .ds-rail-action { min-height: 52px; margin-left: 24px; padding: 0 24px; color: #fff; background: var(--blue, #2367d1); border: 1px solid #fff; border-radius: 4px; font-weight: 700; cursor: pointer; } .ds-rail-action:hover { background: var(--blue-dark, #174ea9); } .ds-rail-action:focus-visible { outline: 3px solid var(--focus, #7bb4ff); outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Courtline Scheduler",
+    "overview": "Manggahan Active should feel like a community facility timetable drawn directly onto the playing surface: energetic, legible, and ready for action. Deep court green and warm score-sheet paper establish the system; sport-surface colors identify context, while action blue and mango are reserved for selection, direction, and active emphasis.\n\nThe system is operational rather than decorative. Strong horizontal bands, court-rule dividers, condensed athletic headings, and clear state symbols make dense availability easy to scan. Its friendliness comes from warm paper, vivid markers, direct language, and accessible controls—not soft cards or ornamental illustration.\n\nThe Courtline Scheduler is a reusable component grammar, not a mandate to reuse the Daily Scoreboard page composition. New surfaces may change their arrangement while preserving the same palette roles, typography, linework, state vocabulary, and action hierarchy. The Daily Scoreboard's exact first viewport and lane composition remain defined only in its surface brief.",
+    "keyCharacteristics": [
+      "Flat, full-width operational bands separated by rules and contrast.",
+      "Condensed uppercase display type paired with a practical sans-serif body.",
+      "Sport surfaces and authored line markings used as functional context.",
+      "One bright blue primary action or selection focus at a time.",
+      "Mostly square geometry with small functional radii on controls.",
+      "Availability communicated through symbol, label, and color together."
+    ],
+    "rules": [
+      { "name": "The One Blue Rule", "body": "Action blue identifies the current selection or the one primary action; do not scatter it across unrelated decoration.", "section": "colors" },
+      { "name": "The Triple-Coded Status Rule", "body": "Availability is never color-only: every state requires its established symbol and a readable label.", "section": "colors" },
+      { "name": "The Two-Voice Rule", "body": "Condensed type announces; body type explains and controls. Do not set paragraphs or form values in the display face.", "section": "typography" },
+      { "name": "The Bands, Not Cards Rule", "body": "Build operational hierarchy with aligned fields, rails, borders, and contrasting surfaces before introducing a contained card.", "section": "layout" },
+      { "name": "The Rule Before Shadow Rule", "body": "Use a border, surface change, or inset line to explain hierarchy. Add a shadow only when overlap must be spatially legible.", "section": "elevation" },
+      { "name": "The Functional Radius Rule", "body": "Round a shape only when it communicates a control, status, or circular symbol; never soften a structural panel merely to make it friendlier.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do preserve court green and score paper as the dominant light/dark relationship.",
+      "Do use action blue for the current selection and the one obvious next action.",
+      "Do pair every availability color with its established symbol and text label.",
+      "Do prefer aligned bands, grids, rules, and sport surfaces for dense operational information.",
+      "Do keep controls keyboard-visible, at least 44px tall where interactive, and respectful of reduced motion.",
+      "Do let new page compositions vary while retaining the Courtline Scheduler's durable tokens and component grammar."
+    ],
+    "donts": [
+      "Don't turn the Daily Scoreboard's exact sequence or first viewport into a mandatory template for every screen.",
+      "Don't build generic rounded-card dashboards, floating glass panels, or shadow-heavy card grids.",
+      "Don't use mango, sport colors, or semantic status colors as arbitrary decoration.",
+      "Don't communicate open, limited, booked, selected, confirmed, or pending with color alone.",
+      "Don't use condensed display type for paragraphs, form values, or long instructions.",
+      "Don't introduce large corner radii on structural surfaces; 3–4px is the control language, not a suggestion to round everything."
+    ]
+  }
+}

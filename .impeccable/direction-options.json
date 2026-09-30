@@ -1,0 +1,133 @@
+{
+  "title": "Choose Manggahan Active's visual world",
+  "question": "Choose the interface direction that should shape the player booking flow and staff schedule.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Locker Ledger",
+      "kicker": "THE ROLL",
+      "lineage": "sports-complex locker tags, magnetic schedule boards, and equipment-room labels",
+      "thesis": "A reservation becomes a claim tag that moves visibly from an open court slot into the player's booking.",
+      "palette": ["#143A32", "#F4B942", "#F5F0E4", "#17324D"],
+      "materials": ["powder-coated green steel", "laminated mango tags", "painted court lines"],
+      "viewport": "A compact sport rail anchors the left, a large week schedule reads like a bank of labeled lockers, and the chosen slot pulls into a booking pass on the right.",
+      "risk": "The tag metaphor can feel cramped if labels and availability are not given enough breathing room.",
+      "raised": [
+        {"from": "Design Annual", "raise": "Registration marks and strict alignment give every time slot print-level precision."},
+        {"from": "Origami Sequence", "raise": "Every booking step stays visibly reversible instead of trapping the player."},
+        {"from": "Nixie Counter", "raise": "Capacity and remaining slots use disciplined tabular figures rather than decorative statistics."}
+      ],
+      "comp": ".impeccable/mocks/decision/locker-ledger.png"
+    },
+    {
+      "id": "model-pick",
+      "label": "Courtline Scheduler",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "painted court geometry, referee score sheets, and community recreation signage",
+      "thesis": "Availability is drawn directly into court geometry, so choosing a time feels like stepping onto the playing surface.",
+      "palette": ["#123B34", "#F6B93B", "#F8F5EC", "#2367D1"],
+      "materials": ["matte court paint", "score-sheet paper", "blue enamel signage"],
+      "viewport": "A bold date-and-sport rail cuts across a court-line schedule, while one oversized next-available slot becomes the primary booking action.",
+      "risk": "It is the most immediately understandable direction, but also the one closest to familiar sports-app territory.",
+      "comp": ".impeccable/mocks/decision/courtline-scheduler.webp"
+    },
+    {
+      "id": "challenger-depot",
+      "label": "Arrival Board",
+      "verdict": "competitive",
+      "lineage": "depot destination blinds translated into a live facility timetable",
+      "thesis": "Facilities move through the day like destinations, with each open slot flipping cleanly into a confirmed reservation.",
+      "palette": ["#173E34", "#F6C744", "#F4EEDD", "#14211D"],
+      "materials": ["bottle-green duck cloth", "chrome-yellow legends", "bleached calico"],
+      "viewport": "A fixed time window frames stacked facility courses; the chosen row snaps forward and opens a calm booking sheet beneath it.",
+      "case": "The timetable mechanism is exceptionally clear and memorable, though it identifies with transit before sport.",
+      "risk": "Too much mechanical motion could slow a task that should feel immediate.",
+      "comp": ".impeccable/mocks/decision/arrival-board.png",
+      "hero": "https://impeccable.style/worlds/cards/operate-c-depot-blind-courses-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/operate-c-depot-blind-courses.webp"
+    },
+    {
+      "id": "challenger-annual",
+      "label": "Registered Schedule",
+      "verdict": "declined",
+      "lineage": "a design annual's precisely registered plate section",
+      "thesis": "Every facility and time is laid out with the calm precision of a signed print edition.",
+      "palette": ["#F5F4F6", "#16181A", "#DCDDF3", "#C9C7C4"],
+      "materials": ["uncoated stock", "hairline rules", "registration marks"],
+      "viewport": "A continuous near-white schedule sheet with a circular confirmation stamp and strict twelve-column alignment.",
+      "case": "Product clarity holds, but the world does not identify strongly enough with community sport.",
+      "kept": "Exact registration and restraint.",
+      "risk": "It can feel like a portfolio archive instead of an active reservation tool.",
+      "hero": "https://impeccable.style/worlds/cards/design-annual-s-plate-section-hero.webp"
+    },
+    {
+      "id": "challenger-cassette",
+      "label": "Side A / Side B",
+      "verdict": "declined",
+      "lineage": "a handwritten cassette j-card timed to fit each side",
+      "thesis": "Morning and evening schedules become two tightly timed sides of one folded daily card.",
+      "palette": ["#F8F6EF", "#2450A4", "#D94A3A", "#77736C"],
+      "materials": ["lined inlay stock", "ballpoint annotations", "folded spine"],
+      "viewport": "The booking day unfolds into morning and evening tracklists with durations aligned at the edge.",
+      "case": "The time metaphor is charming but makes reservation status less immediate than the grounded directions.",
+      "kept": "Every schedule must fit a visible time budget.",
+      "risk": "Handwritten density could reduce scanability and accessibility.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-cassette-j-card-hero.webp"
+    },
+    {
+      "id": "challenger-alphabet",
+      "label": "Kinetic Playbook",
+      "verdict": "declined",
+      "lineage": "an alphabet storm where type behaves as physical matter",
+      "thesis": "Sport names and times reorganize into live schedules as the player changes filters.",
+      "palette": ["#FAFAF7", "#111315", "#A8AFB6", "#F3B51B"],
+      "materials": ["paper field", "storm-black type", "silver transition ink"],
+      "viewport": "A monumental sport name breaks into the available time grid while the form remains anchored below.",
+      "case": "The motion is memorable but competes with the operational task and weakens quick scanning.",
+      "kept": "One orchestrated transformation should explain cause and effect.",
+      "risk": "Expressive typography could obscure the familiar booking controls players need.",
+      "hero": "https://impeccable.style/worlds/cards/dream-surreal-impossible-worlds-alphabet-storm-hero.webp"
+    },
+    {
+      "id": "challenger-origami",
+      "label": "Folded Booking",
+      "verdict": "declined",
+      "lineage": "a single sheet progressing through a recoverable origami sequence",
+      "thesis": "The reservation form folds from facility to schedule to details without ever losing its previous state.",
+      "palette": ["#C93C2F", "#F5EFE2", "#C9A23E", "#171715"],
+      "materials": ["vermilion washi", "crease diagrams", "sumi notes"],
+      "viewport": "A central booking sheet changes shape across three steps, with the current crease highlighted in gold.",
+      "case": "The reversible flow is strong, but the visual identity says craft instruction more than sports access.",
+      "kept": "Every step remains recoverable and deep-linkable.",
+      "risk": "The folding metaphor may make a simple form feel more complex than it is.",
+      "hero": "https://impeccable.style/worlds/cards/paper-folds-pleats-deployable-orizuru-crane-sequence-hero.webp"
+    },
+    {
+      "id": "challenger-nixie",
+      "label": "Capacity Counter",
+      "verdict": "declined",
+      "lineage": "a nixie-tube laboratory counter organized around changing quantities",
+      "thesis": "Availability, capacity, and reservation counts glow as the central instrument panel.",
+      "palette": ["#111714", "#F27C32", "#7D8783", "#E8E1D3"],
+      "materials": ["blackened steel", "clear glass", "engraved labels"],
+      "viewport": "Large glowing availability digits lead, with facilities and time choices arranged as instrument banks beneath.",
+      "case": "Counts become beautifully legible, but players need names, dates, and actions more than spectacle around numbers.",
+      "kept": "Numerical states use fixed positions and tabular rhythm.",
+      "risk": "The dark laboratory character feels exclusive rather than community-oriented.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-nixie-laboratory-counter-hero.webp"
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "comp", "toggle": true},
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "A familiar polished sports-booking dashboard with facility cards, a calendar, and a conventional checkout flow.",
+    "palette": ["#FFFFFF", "#123B34", "#F5B83B", "#2563EB"],
+    "materials": ["clean grid", "rounded cards", "sports photography"],
+    "viewport": "A standard top navigation, search banner, facility-card grid, and right-side availability calendar.",
+    "risk": "Easy to understand, but indistinguishable from competing booking products by design.",
+    "comp": ".impeccable/mocks/decision/category-standard.png"
+  },
+  "steer": true
+}

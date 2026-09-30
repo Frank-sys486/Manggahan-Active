@@ -1,0 +1,42 @@
+{
+  "title": "Choose the booking composition",
+  "question": "All three use the Courtline Scheduler identity. Choose the layout that should become the React interface.",
+  "options": [
+    {
+      "id": "weekly-court",
+      "label": "Weekly Court",
+      "kicker": "DIRECTION COMP",
+      "lineage": "full-court weekly availability board",
+      "thesis": "The entire week becomes one playable court, with the next available slot always visible.",
+      "palette": ["#123B34", "#F6B93B", "#F8F5EC", "#2367D1"],
+      "materials": ["matte court paint", "score-sheet paper", "blue enamel signage"],
+      "viewport": "Sport tabs and the week rail sit above a large court-line schedule; the booking summary stays fixed at the right.",
+      "risk": "The full grid carries more information than some phone users need at once.",
+      "comp": ".impeccable/mocks/decision/courtline-scheduler.webp"
+    },
+    {
+      "id": "daily-scoreboard",
+      "label": "Daily Scoreboard",
+      "kicker": "FOCUS VARIATION",
+      "lineage": "referee score sheet and game-day fixture board",
+      "thesis": "One day takes center court, making the shortest path to an available slot unmistakable.",
+      "palette": ["#123B34", "#F6B93B", "#F8F5EC", "#2367D1"],
+      "materials": ["matte court paint", "score-sheet paper", "blue enamel signage"],
+      "viewport": "A large date scoreboard leads into three facility lanes; selecting a time opens a horizontal booking strip along the bottom.",
+      "risk": "Comparing multiple days requires one more interaction than the weekly view.",
+      "comp": ".impeccable/mocks/courtline-daily-scoreboard.png"
+    },
+    {
+      "id": "facility-lanes",
+      "label": "Facility Lanes",
+      "kicker": "DENSITY VARIATION",
+      "lineage": "recreation-center lane board and court assignment sheet",
+      "thesis": "Facilities become clear lanes while dates and times remain lightweight controls above them.",
+      "palette": ["#123B34", "#F6B93B", "#F8F5EC", "#2367D1"],
+      "materials": ["matte court paint", "score-sheet paper", "blue enamel signage"],
+      "viewport": "A narrow filter bench leads into facility columns with bold open-slot blocks and a compact booking pass layered at the lower right.",
+      "risk": "The lane layout is efficient but less dramatic than the full-court composition.",
+      "comp": ".impeccable/mocks/courtline-facility-lanes.png"
+    }
+  ]
+}
