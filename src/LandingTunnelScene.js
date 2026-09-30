@@ -39,6 +39,12 @@ const fragmentShader = `
     return mix(blob, texture2D(uMaskTexture, uv).a, uHasTexture);
   }
 
+  float hash(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+  }
+
   void main() {
     float zoom = exp(log(12.0) * smoothstep(0.3, 0.7, uProgress));
     float aspect = uResolution.x / uResolution.y;
@@ -51,14 +57,20 @@ const fragmentShader = `
       + shapeAt(uv + vec2(0.0, edge.y)) + shapeAt(uv - vec2(0.0, edge.y))) * 0.25;
     float shadow = max(0.0, inside - neighbors) * 0.7;
     float trail = texture2D(uTrailTexture, vUv).a * (1.0 - smoothstep(0.18, 0.45, uProgress));
-    float grain = fract(sin(dot(floor(gl_FragCoord.xy * 0.75), vec2(12.9898, 78.233))) * 43758.5453);
-    float edgeDust = clamp(abs(inside - neighbors) * 3.0, 0.0, 1.0) * step(0.34, trail * grain);
-    float spray = (1.0 - inside) * step(0.48, trail * grain);
+    vec2 pixel = gl_FragCoord.xy;
+    float fineGrain = hash(floor(pixel * 0.75));
+    float clusterGrain = hash(floor(pixel / 6.0) + 17.0);
+    float grain = mix(fineGrain, clusterGrain, 0.35);
+    float density = smoothstep(0.03, 0.65, trail);
+    float particles = smoothstep(0.68, 0.90, grain) * density;
+    float boundary = clamp(abs(inside - neighbors) * 3.0, 0.0, 1.0);
+    float edgeDust = inside * boundary * particles;
+    float spray = (1.0 - inside) * particles * 0.42;
     float rightLeg = inside * smoothstep(0.64, 0.72, uv.x) * smoothstep(0.20, 0.32, uv.y)
       * (1.0 - smoothstep(0.76, 0.82, uv.y)) * (1.0 - smoothstep(0.06, 0.28, uProgress));
-    rightLeg *= 1.0 - step(0.32, trail * grain);
+    rightLeg *= 1.0 - smoothstep(0.24, 0.72, trail) * smoothstep(0.48, 0.78, grain);
     float alpha = clamp(1.0 - inside + shadow + rightLeg - edgeDust * 0.7, 0.0, 1.0) * uOpacity;
-    gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), max(max(shadow, spray), rightLeg)), alpha);
+    gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), clamp(shadow + spray + rightLeg, 0.0, 1.0)), alpha);
   }
 `
 
@@ -118,8 +130,8 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   const stampContext = stampCanvas.getContext('2d')
   if (stampContext) {
     const gradient = stampContext.createRadialGradient(32, 32, 0, 32, 32, 32)
-    gradient.addColorStop(0, 'rgba(255,255,255,0.9)')
-    gradient.addColorStop(0.35, 'rgba(255,255,255,0.55)')
+    gradient.addColorStop(0, 'rgba(255,255,255,0.07)')
+    gradient.addColorStop(0.35, 'rgba(255,255,255,0.035)')
     gradient.addColorStop(1, 'rgba(255,255,255,0)')
     stampContext.fillStyle = gradient
     stampContext.fillRect(0, 0, 64, 64)
@@ -193,31 +205,16 @@ function makeTunnel(root, maskTexture, atlasTexture) {
 
   const state = { progress: 0, cameraZ: 15 }
   const pointer = { x: 0, y: 0 }
-  const trailPointer = { x: 0, y: 0, targetX: 0, targetY: 0, velocity: 0, active: false, life: 0 }
+  const trailPointer = { x: 0, y: 0, time: 0, active: false, life: 0 }
   let active = true
   let elapsed = 0
   const paintTrail = () => {
-    if (!trailContext || !stampContext || (!trailPointer.active && trailPointer.life === 0)) return
-    trailContext.globalCompositeOperation = 'destination-in'
-    trailContext.fillStyle = 'rgba(0,0,0,0.92)'
+    if (!trailContext || trailPointer.life === 0) return
+    trailContext.globalCompositeOperation = 'destination-out'
+    trailContext.fillStyle = 'rgba(0,0,0,0.075)'
     trailContext.fillRect(0, 0, trailCanvas.width, trailCanvas.height)
     trailContext.globalCompositeOperation = 'source-over'
-    if (trailPointer.active) {
-      const fromX = trailPointer.x
-      const fromY = trailPointer.y
-      trailPointer.x += (trailPointer.targetX - fromX) * 0.35
-      trailPointer.y += (trailPointer.targetY - fromY) * 0.35
-      const distance = Math.hypot(trailPointer.x - fromX, trailPointer.y - fromY)
-      const radius = Math.min(trailCanvas.width, trailCanvas.height) * 0.055 + Math.min(12, trailPointer.velocity * 0.08)
-      const steps = Math.max(1, Math.ceil(distance / (radius * 0.4)))
-      for (let i = 1; i <= steps; i++) {
-        const x = fromX + (trailPointer.x - fromX) * i / steps
-        const y = fromY + (trailPointer.y - fromY) * i / steps
-        trailContext.drawImage(stampCanvas, x - radius, y - radius, radius * 2, radius * 2)
-      }
-      trailPointer.velocity *= 0.8
-      trailPointer.life = 90
-    } else trailPointer.life--
+    trailPointer.life--
     trailTexture.needsUpdate = true
   }
   const render = time => {
@@ -262,15 +259,25 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     pointer.y = 0.5 - y
     const trailX = x * trailCanvas.width
     const trailY = y * trailCanvas.height
-    if (!trailPointer.active) {
-      trailPointer.x = trailX
-      trailPointer.y = trailY
-      trailPointer.targetX = trailX
-      trailPointer.targetY = trailY
+    if (!trailContext || !stampContext) return
+    const dx = trailX - trailPointer.x
+    const dy = trailY - trailPointer.y
+    const distance = Math.hypot(dx, dy)
+    const velocity = trailPointer.active ? distance / Math.max(1, event.timeStamp - trailPointer.time) : 0
+    const radius = Math.min(trailCanvas.width, trailCanvas.height) * 0.04 + Math.min(18, velocity * 16)
+    const spacing = Math.max(1, 4 * trailCanvas.width / bounds.width)
+    const steps = trailPointer.active ? Math.max(1, Math.ceil(distance / spacing)) : 1
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps
+      const px = trailPointer.active ? trailPointer.x + dx * t : trailX
+      const py = trailPointer.active ? trailPointer.y + dy * t : trailY
+      trailContext.drawImage(stampCanvas, px - radius, py - radius, radius * 2, radius * 2)
     }
-    trailPointer.velocity = Math.hypot(trailX - trailPointer.targetX, trailY - trailPointer.targetY)
-    trailPointer.targetX = trailX
-    trailPointer.targetY = trailY
+    trailTexture.needsUpdate = true
+    trailPointer.life = 90
+    trailPointer.x = trailX
+    trailPointer.y = trailY
+    trailPointer.time = event.timeStamp
     trailPointer.active = true
   }
   const leave = () => { pointer.x = 0; pointer.y = 0; trailPointer.active = false }
