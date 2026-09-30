@@ -27,12 +27,12 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   scene.background = new THREE.Color('#061b18')
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 80)
   camera.rotation.order = 'YXZ'
-  const wallGeometry = new THREE.CylinderGeometry(19, 19, 16, 64, 1, true)
+  const wallGeometry = new THREE.CylinderGeometry(19, 19, 30, 64, 1, true)
   const wallMaterial = new THREE.MeshBasicMaterial({ color: '#061b18', side: THREE.BackSide })
   scene.add(new THREE.Mesh(wallGeometry, wallMaterial))
   const rimGeometry = new THREE.TorusGeometry(18.95, 0.025, 6, 96)
   const rimMaterial = new THREE.MeshBasicMaterial({ color: '#f2c94c', transparent: true, opacity: 0.18 })
-  for (const y of [-7.8, 7.8]) {
+  for (const y of [-14.8, 14.8]) {
     const rim = new THREE.Mesh(rimGeometry, rimMaterial)
     rim.rotation.x = Math.PI / 2
     rim.position.y = y
@@ -51,8 +51,8 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     }
     return geometry
   })
-  // Four staggered rows wrap the viewer; each card faces inward.
-  const planes = Array.from({ length: 72 }, (_, index) => {
+  // Six staggered rows fill the taller cylinder; each card faces inward.
+  const planes = Array.from({ length: 108 }, (_, index) => {
     const sport = index < sports.length ? index : Math.floor(Math.random() * sports.length)
     const row = Math.floor(index / 18)
     const plane = new THREE.Mesh(geometries[sport], new THREE.MeshBasicMaterial({
@@ -62,7 +62,7 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     plane.userData = {
       sport,
       angle: ((index % 18 + row % 2 * 0.5 + (Math.random() - 0.5) * 0.25) / 18) * Math.PI * 2,
-      height: (row - 1.5) * 3.5 + (Math.random() - 0.5) * 0.5,
+      height: (row - 2.5) * 4.5 + (Math.random() - 0.5) * 0.5,
       radius: 13.5 + Math.random() * 2.2,
       size: 3.7 + Math.random() * 0.6,
     }
@@ -79,8 +79,8 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   })
   const pointer = new THREE.Vector2()
   const raycaster = new THREE.Raycaster()
-  const cursorX = gsap.quickTo(cursor, 'x', { duration: 0.2, ease: 'power3.out' })
-  const cursorY = gsap.quickTo(cursor, 'y', { duration: 0.2, ease: 'power3.out' })
+  const cursorX = gsap.quickTo(cursor, 'x', { duration: 0.11, ease: 'power3.out' })
+  const cursorY = gsap.quickTo(cursor, 'y', { duration: 0.11, ease: 'power3.out' })
   let hovered = null
   let pointerInside = false
   let cursorEnabled = false
@@ -90,25 +90,33 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
 
   const highlight = plane => {
     if (plane === hovered) return
+    if (hovered) gsap.to(hovered.scale, {
+      x: hovered.userData.size, y: hovered.userData.size, z: hovered.userData.size,
+      duration: 0.2, ease: 'power2.out', overwrite: true,
+    })
     hovered = plane
+    if (plane) gsap.to(plane.scale, {
+      x: plane.userData.size * 1.14, y: plane.userData.size * 1.14, z: plane.userData.size * 1.14,
+      duration: 0.22, ease: 'back.out(1.4)', overwrite: true,
+    })
     planes.forEach(item => gsap.to(item.material, {
-      opacity: !plane ? 0.45 : item === plane ? 1 : 0.12,
-      duration: 0.35, ease: 'power2.out', overwrite: true,
+      opacity: !plane ? 0.45 : item === plane ? 1 : 0.08,
+      duration: 0.18, ease: 'power2.out', overwrite: true,
     }))
-    gsap.to(logo, { autoAlpha: plane ? 0 : 1, scale: plane ? 0.96 : 1, duration: 0.3, overwrite: true })
+    gsap.to(logo, { autoAlpha: plane ? 0 : 1, scale: plane ? 0.9 : 1, duration: 0.18, overwrite: true })
     gsap.killTweensOf(title)
     if (plane) {
       gsap.to(title, {
-        autoAlpha: 0, y: 8, duration: 0.1,
+        autoAlpha: 0, y: 8, duration: 0.06,
         onComplete: () => {
           title.textContent = sports[plane.userData.sport].name
-          gsap.to(title, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out' })
+          gsap.to(title, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power2.out' })
         },
       })
     } else {
-      gsap.to(title, { autoAlpha: 0, y: 8, duration: 0.2 })
+      gsap.to(title, { autoAlpha: 0, y: 8, duration: 0.14 })
     }
-    gsap.to(cursor, { autoAlpha: plane && cursorEnabled ? 1 : 0, duration: 0.15, overwrite: 'auto' })
+    gsap.to(cursor, { autoAlpha: plane && cursorEnabled ? 1 : 0, duration: 0.1, overwrite: 'auto' })
     canvas.style.cursor = plane ? (cursorEnabled ? 'none' : 'pointer') : ''
   }
   const pick = () => {
@@ -164,9 +172,12 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   }
   const tick = (_, delta) => {
     if (!visible || document.hidden) return
-    const ease = 1 - Math.exp(-Math.min(delta, 64) / 160)
-    camera.rotation.y += (scrollYaw - (pointerInside ? pointer.x * 0.55 : 0) - camera.rotation.y) * ease
-    camera.rotation.x += ((pointerInside ? pointer.y * 0.22 : 0) - camera.rotation.x) * ease
+    const ease = 1 - Math.exp(-Math.min(delta, 64) / 95)
+    camera.rotation.y += (scrollYaw - (pointerInside ? pointer.x * 0.7 : 0) - camera.rotation.y) * ease
+    const sideways = pointerInside ? pointer.x * 1.8 : 0
+    camera.position.x += (sideways * Math.cos(camera.rotation.y) - camera.position.x) * ease
+    camera.position.z += (-sideways * Math.sin(camera.rotation.y) - camera.position.z) * ease
+    camera.position.y += ((pointerInside ? pointer.y * 3.8 : 0) - camera.position.y) * ease
     if (pointerInside) highlight(pick())
     renderer.render(scene, camera)
   }
@@ -193,7 +204,7 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     canvas.removeEventListener('click', click)
     canvas.removeEventListener('webglcontextlost', contextLost)
     window.removeEventListener('scroll', scroll)
-    gsap.killTweensOf([logo, title, cursor, ...planes.map(plane => plane.material)])
+    gsap.killTweensOf([logo, title, cursor, ...planes.map(plane => plane.material), ...planes.map(plane => plane.scale)])
     cursorX.tween.kill()
     cursorY.tween.kill()
     geometries.forEach(geometry => geometry.dispose())
