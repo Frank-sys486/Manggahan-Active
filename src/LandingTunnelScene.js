@@ -62,10 +62,10 @@ const fragmentShader = `
     vec2 anchor = mix(vec2(0.5), vec2(0.5, 1.0 - 340.0 / 520.0), smoothstep(0.28, 0.68, uProgress));
     vec2 uv = anchor + (vUv - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
     float inside = shapeAt(uv);
-    vec2 edge = vec2(0.012);
+    vec2 edge = vec2(3.0 / (baseScale * zoom * uResolution.y));
     float neighbors = (shapeAt(uv + vec2(edge.x, 0.0)) + shapeAt(uv - vec2(edge.x, 0.0))
       + shapeAt(uv + vec2(0.0, edge.y)) + shapeAt(uv - vec2(0.0, edge.y))) * 0.25;
-    float shadow = max(0.0, inside - neighbors) * 0.7;
+    float edgeLight = max(0.0, inside - neighbors) * 0.22;
     float hoverFade = 1.0 - smoothstep(0.18, 0.45, uProgress);
     float trail = texture2D(uTrailTexture, vUv).a * hoverFade;
     vec2 pointerUv = anchor + (uPointer - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
@@ -74,8 +74,8 @@ const fragmentShader = `
     float hover = (1.0 - smoothstep(0.0, 58.0, pointerDistance)) * uHover * pointerInside * hoverFade;
     float activity = max(hover, trail * 0.75);
     if (activity < 0.005) {
-      float alpha = clamp(1.0 - inside + shadow, 0.0, 1.0) * uOpacity;
-      gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), shadow), alpha);
+      float alpha = clamp(1.0 - inside + edgeLight, 0.0, 1.0) * uOpacity;
+      gl_FragColor = vec4(vec3(1.0), alpha);
       return;
     }
     vec2 pixel = gl_FragCoord.xy;
@@ -93,8 +93,8 @@ const fragmentShader = `
     float outsideEdge = smoothstep(0.02, 0.27, max(neighbors - inside, 0.0));
     float whiteErosion = clamp(inside * particles * 0.65, 0.0, 0.85);
     float outsideDust = outsideEdge * particles * 0.55;
-    float alpha = clamp(1.0 - inside + shadow + whiteErosion, 0.0, 1.0) * uOpacity;
-    float ink = clamp(shadow * (1.0 - whiteErosion) + outsideDust, 0.0, 1.0);
+    float alpha = clamp(1.0 - inside + edgeLight + whiteErosion, 0.0, 1.0) * uOpacity;
+    float ink = outsideDust;
     gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), ink), alpha);
   }
 `
