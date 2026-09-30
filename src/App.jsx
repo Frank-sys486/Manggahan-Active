@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import LandingMorph, { LandingGlyph } from './LandingMorph.jsx'
 import LandingCourt from './LandingCourt.jsx'
 
@@ -255,87 +255,42 @@ function StatusMark({ status }) {
   return <span className="status-mark status-mark--open" aria-hidden="true" />
 }
 
-function LandingOrbit({ onEnter }) {
+function LandingOrbit() {
   const sectionRef = useRef(null)
 
-  useLayoutEffect(() => {
+  const explore = index => {
+    const court = document.querySelectorAll('.landing-sport')[index]
+    court?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' })
+    court?.focus({ preventScroll: true })
+  }
+
+  useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const section = sectionRef.current
     const scene = section.firstElementChild
-    const stage = scene.querySelector('.landing-orbit__cards')
-    const cards = [...stage.querySelectorAll('.landing-orbit__card')]
-    const target = { reveal: 0, turn: 0, x: 0, y: 0 }
-    const current = { ...target }
-    const clamp = value => Math.max(0, Math.min(1, value))
-    let frame = 0
-    let radius = 0
-    let depth = 0
-    let rise = 0
-    stage.classList.add('is-orbit')
-
-    const draw = () => {
-      frame = 0
-      for (const key of Object.keys(current)) current[key] += (target[key] - current[key]) * 0.16
-      stage.style.transform = `rotateX(${-current.y * 4}deg) rotateY(${current.x * 6}deg)`
-      cards.forEach((card, index) => {
-        const angle = index / cards.length * Math.PI * 2 + current.turn + Math.PI / 6
-        const front = (Math.cos(angle) + 1) / 2
-        const arrival = clamp((current.reveal - index * 0.045) / 0.78)
-        card.style.opacity = (arrival * (0.55 + front * 0.45)).toFixed(3)
-        card.style.transform = `translate(-50%, -50%) translate3d(${Math.sin(angle) * radius}px, ${Math.cos(angle) * rise}px, ${Math.cos(angle) * depth - (1 - arrival) * 180}px) rotateY(${-Math.sin(angle) * 24}deg) scale(${0.88 + arrival * 0.12})`
-      })
-      if (Object.keys(current).some(key => Math.abs(current[key] - target[key]) > 0.002)) schedule()
-    }
-    const schedule = () => { if (!frame && !document.hidden) frame = requestAnimationFrame(draw) }
+    const controller = new AbortController()
+    let cleanup = () => {}
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      observer.disconnect()
+      import('./LandingOrbitScene.js')
+        .then(({ mountLandingOrbit }) => controller.signal.aborted ? () => {} : mountLandingOrbit(scene, facilitySeed, explore, controller.signal))
+        .then(dispose => { if (controller.signal.aborted) dispose(); else cleanup = dispose })
+        .catch(error => { if (!controller.signal.aborted) console.warn('Gallery unavailable; showing sports cards.', error) })
+    }, { rootMargin: '300px' })
     const measure = () => {
-      const rect = section.getBoundingClientRect()
-      target.reveal = clamp((window.innerHeight - rect.top) / (window.innerHeight * 0.72))
-      target.turn = clamp(-rect.top / Math.max(1, section.offsetHeight - scene.offsetHeight)) * Math.PI * 2
-      scene.style.opacity = clamp(scene.getBoundingClientRect().bottom / window.innerHeight).toFixed(3)
-      schedule()
+      scene.style.opacity = Math.max(0, Math.min(1, scene.getBoundingClientRect().bottom / window.innerHeight)).toFixed(3)
     }
-    const resize = () => {
-      radius = Math.max(0, (stage.clientWidth - cards[0].offsetWidth * 1.5) / 2)
-      depth = Math.min(280, stage.clientWidth * 0.25)
-      rise = Math.min(140, stage.clientHeight * 0.27)
-      measure()
-    }
-    const move = event => {
-      if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return
-      const rect = scene.getBoundingClientRect()
-      target.x = (event.clientX - rect.left) / rect.width * 2 - 1
-      target.y = (event.clientY - rect.top) / rect.height * 2 - 1
-      schedule()
-    }
-    const leave = () => { target.x = 0; target.y = 0; schedule() }
-    const focus = event => {
-      const index = cards.indexOf(event.target)
-      if (index < 0 || !event.target.matches(':focus-visible')) return
-      // Bring keyboard-selected cards to the front via the shortest arc.
-      const angle = index / cards.length * Math.PI * 2 + current.turn + Math.PI / 6
-      target.turn = current.turn - Math.atan2(Math.sin(angle), Math.cos(angle))
-      schedule()
-    }
+    observer.observe(section)
     window.addEventListener('scroll', measure, { passive: true })
-    window.addEventListener('resize', resize)
-    scene.addEventListener('pointermove', move)
-    scene.addEventListener('pointerleave', leave)
-    stage.addEventListener('focusin', focus)
-    resize()
-    cancelAnimationFrame(frame)
-    frame = 0
-    Object.assign(current, target)
-    draw()
+    window.addEventListener('resize', measure)
+    measure()
     return () => {
-      cancelAnimationFrame(frame)
+      controller.abort()
+      observer.disconnect()
+      cleanup()
       window.removeEventListener('scroll', measure)
-      window.removeEventListener('resize', resize)
-      scene.removeEventListener('pointermove', move)
-      scene.removeEventListener('pointerleave', leave)
-      stage.removeEventListener('focusin', focus)
-      stage.classList.remove('is-orbit')
-      stage.style.removeProperty('transform')
-      cards.forEach(card => { card.style.removeProperty('transform'); card.style.removeProperty('opacity') })
+      window.removeEventListener('resize', measure)
       scene.style.removeProperty('opacity')
     }
   }, [])
@@ -344,15 +299,19 @@ function LandingOrbit({ onEnter }) {
     <section ref={sectionRef} className="landing-orbit" id="sports" aria-labelledby="orbit-title">
       <div className="landing-orbit__scene">
         <div className="landing-orbit__heading"><h2 id="orbit-title">Move into<br />the game.</h2><p>Six sports. One place to play.</p></div>
+        <div className="landing-orbit__canvas" aria-hidden="true" />
+        <div className="landing-orbit__core" aria-hidden="true"><LandingGlyph /></div>
+        <p className="landing-orbit__title" aria-hidden="true" />
+        <span className="landing-orbit__cursor" aria-hidden="true">→ Learn more</span>
         <div className="landing-orbit__cards">
-          <div className="landing-orbit__core" aria-hidden="true"><LandingGlyph /></div>
           {facilitySeed.map((facility, index) => (
-            <button key={facility.id} className="landing-orbit__card" type="button" onClick={onEnter} aria-label={`Sign in to book ${facility.name}`}>
+            <button key={facility.id} className="landing-orbit__card" type="button" onClick={() => explore(index)} aria-label={`Learn more about ${facility.name}`}>
               <span className="landing-orbit__photo" style={{ '--tile-x': `${index % 3 * 50}%`, '--tile-y': `${Math.floor(index / 3) * 100}%` }} aria-hidden="true" />
               <span className="landing-orbit__label"><SportMark sport={facility.sport} size={26} /><strong>{facility.name}</strong><LineIcon name="arrow" size={19} /></span>
             </button>
           ))}
         </div>
+        <a className="landing-orbit__browse" href="#courts-index">Explore all courts <LineIcon name="arrow" size={20} /></a>
         <p className="landing-orbit__disclaimer">Illustrative scenes for this classroom concept.</p>
       </div>
     </section>
@@ -417,7 +376,7 @@ function LandingPage({ onEnter }) {
           </section>
         </div>
 
-        <LandingOrbit onEnter={onEnter} />
+        <LandingOrbit />
 
         <section className="landing-sports" id="courts-index" aria-labelledby="sports-title">
           <div className="landing-sports__intro">
