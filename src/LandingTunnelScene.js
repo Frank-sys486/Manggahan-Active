@@ -263,7 +263,8 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     artifact.rotation.set(time * 0.07, time * 0.11, time * 0.035)
     maskMaterial.uniforms.uProgress.value = state.progress
     maskMaterial.uniforms.uOpacity.value = 1 - smoothstep(0.65, 0.8, state.progress)
-    scene.background.copy(tunnelBackground).lerp(orbitBackground, smoothstep(0.8, 1, state.progress))
+    scene.background.copy(tunnelBackground).lerp(orbitBackground, smoothstep(0.8, 0.92, state.progress))
+    hero.style.opacity = (1 - smoothstep(0.88, 0.98, state.progress)).toFixed(3)
     hoverStrength *= Math.exp(-delta / 0.16)
     maskMaterial.uniforms.uHover.value = hoverStrength
     hero.style.setProperty('--landing-copy', (1 - smoothstep(0.08, 0.36, state.progress)).toFixed(3))
@@ -380,6 +381,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     window.removeEventListener('resize', resize)
     hero.removeEventListener('pointermove', move)
     hero.removeEventListener('pointerleave', leave)
+    hero.style.removeProperty('opacity')
     hero.style.removeProperty('--landing-copy')
     root.classList.remove('landing-morph--ready')
     for (const panel of panels) { panel.geometry.dispose(); panel.material.dispose() }
