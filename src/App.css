@@ -79,7 +79,14 @@ button:active:not(:disabled) { transform: scale(.97); }
 .landing-orbit__heading h2 { margin: 0; font: 800 clamp(3.8rem, 7vw, 6rem)/.79 var(--font-display); letter-spacing: -.025em; text-transform: uppercase; }
 .landing-orbit__heading p { margin: 0 0 4px; color: #cbd9d3; font-weight: 600; }
 .landing-orbit__cards { width: min(100%, 1180px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-self: center; justify-self: center; gap: clamp(10px, 1.4vw, 18px); transform-style: preserve-3d; }
+.landing-orbit__cards.is-orbit { position: relative; display: block; height: 100%; min-height: 0; }
+.landing-orbit__core { display: none; }
+.is-orbit .landing-orbit__core { position: absolute; left: 50%; top: 50%; display: block; width: clamp(90px, 17vw, 200px); transform: translate(-50%, -50%); pointer-events: none; }
+.landing-orbit__core svg { display: block; width: 100%; filter: drop-shadow(0 12px 18px rgba(0,0,0,.3)); }
+.landing-orbit__core path { stroke: var(--mango); }
+.landing-orbit__core circle { fill: var(--paper-bright); }
 .landing-orbit__card { position: relative; min-width: 0; height: clamp(130px, 25svh, 220px); display: block; padding: 0; color: var(--paper-bright); background: #17473f; border: 1px solid rgba(255,255,255,.26); text-align: left; overflow: hidden; box-shadow: 0 16px 32px rgba(0,0,0,.24); backface-visibility: hidden; transition: border-color var(--motion-standard) var(--motion-ease), box-shadow var(--motion-standard) var(--motion-ease); }
+.is-orbit .landing-orbit__card { position: absolute; left: 50%; top: 50%; width: clamp(130px, 21vw, 260px); will-change: transform; }
 .landing-orbit__card:hover, .landing-orbit__card:focus-visible { border-color: var(--mango); box-shadow: 0 20px 36px rgba(0,0,0,.34); }
 .landing-orbit__card:active { filter: brightness(1.13); }
 .landing-orbit__photo { position: absolute; inset: 0; display: block; background-image: url('./assets/sports-atlas.jpg'); background-size: 300% 200%; background-position: var(--tile-x) var(--tile-y); }
