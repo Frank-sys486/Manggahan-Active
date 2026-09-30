@@ -55,16 +55,20 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   const planes = Array.from({ length: 108 }, (_, index) => {
     const sport = index < sports.length ? index : Math.floor(Math.random() * sports.length)
     const row = Math.floor(index / 18)
+    const foreground = index % 3 === 0
+    const radius = foreground ? 9.5 + Math.random() * 2 : 14 + Math.random() * 3
+    const restingOpacity = foreground ? 0.55 : 0.38
     const plane = new THREE.Mesh(geometries[sport], new THREE.MeshBasicMaterial({
-      map: texture, transparent: true, opacity: 0.45, depthWrite: false, toneMapped: false,
+      map: texture, transparent: true, opacity: restingOpacity, depthWrite: false, toneMapped: false,
       side: THREE.DoubleSide,
     }))
     plane.userData = {
       sport,
       angle: ((index % 18 + row % 2 * 0.5 + (Math.random() - 0.5) * 0.25) / 18) * Math.PI * 2,
       height: (row - 2.5) * 4.5 + (Math.random() - 0.5) * 0.5,
-      radius: 13.5 + Math.random() * 2.2,
-      size: 3.7 + Math.random() * 0.6,
+      radius,
+      restingOpacity,
+      size: (foreground ? 3 : 3.7) + Math.random() * 0.6,
     }
     plane.position.set(
       Math.sin(plane.userData.angle) * plane.userData.radius,
@@ -99,7 +103,7 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
       duration: 0.22, ease: 'back.out(1.4)', overwrite: true,
     })
     planes.forEach(item => gsap.to(item.material, {
-      opacity: !plane ? 0.45 : item === plane ? 1 : 0.08,
+      opacity: !plane ? item.userData.restingOpacity : item === plane ? 1 : 0.08,
       duration: 0.18, ease: 'power2.out', overwrite: true,
     }))
     gsap.to(logo, { autoAlpha: plane ? 0 : 1, scale: plane ? 0.9 : 1, duration: 0.18, overwrite: true })
