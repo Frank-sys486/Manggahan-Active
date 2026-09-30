@@ -296,9 +296,8 @@ function LandingOrbit() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="landing-orbit" id="sports" aria-labelledby="orbit-title">
+    <section ref={sectionRef} className="landing-orbit" id="sports" aria-label="Sports gallery">
       <div className="landing-orbit__scene">
-        <div className="landing-orbit__heading"><h2 id="orbit-title">Move into<br />the game.</h2><p>Six sports. One place to play.</p></div>
         <div className="landing-orbit__canvas" aria-hidden="true" />
         <div className="landing-orbit__core" aria-hidden="true"><LandingGlyph /></div>
         <p className="landing-orbit__title" aria-hidden="true" />
@@ -311,8 +310,6 @@ function LandingOrbit() {
             </button>
           ))}
         </div>
-        <a className="landing-orbit__browse" href="#courts-index">Explore all courts <LineIcon name="arrow" size={20} /></a>
-        <p className="landing-orbit__disclaimer">Illustrative scenes for this classroom concept.</p>
       </div>
     </section>
   )
