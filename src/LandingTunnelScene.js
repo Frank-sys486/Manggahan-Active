@@ -129,7 +129,9 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   try {
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color('#050505')
+  const tunnelBackground = new THREE.Color('#050505')
+  const orbitBackground = new THREE.Color('#061b18')
+  scene.background = tunnelBackground.clone()
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 300)
   camera.position.z = 15
   scene.add(camera)
@@ -261,6 +263,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     artifact.rotation.set(time * 0.07, time * 0.11, time * 0.035)
     maskMaterial.uniforms.uProgress.value = state.progress
     maskMaterial.uniforms.uOpacity.value = 1 - smoothstep(0.65, 0.8, state.progress)
+    scene.background.copy(tunnelBackground).lerp(orbitBackground, smoothstep(0.8, 1, state.progress))
     hoverStrength *= Math.exp(-delta / 0.16)
     maskMaterial.uniforms.uHover.value = hoverStrength
     hero.style.setProperty('--landing-copy', (1 - smoothstep(0.08, 0.36, state.progress)).toFixed(3))
