@@ -23,7 +23,8 @@ const vertexShader = `
 `
 
 const fragmentShader = `
-  uniform sampler2D uTexture;
+  uniform sampler2D uMaskTexture;
+  uniform sampler2D uTrailTexture;
   uniform float uHasTexture;
   uniform float uProgress;
   uniform float uOpacity;
@@ -35,13 +36,13 @@ const fragmentShader = `
     float angle = atan(p.y, p.x);
     float radius = 0.35 + 0.035 * sin(angle * 3.0) + 0.018 * sin(angle * 7.0 + 1.2);
     float blob = 1.0 - smoothstep(radius - 0.01, radius + 0.01, length(p));
-    return mix(blob, texture2D(uTexture, uv).a, uHasTexture);
+    return mix(blob, texture2D(uMaskTexture, uv).a, uHasTexture);
   }
 
   void main() {
     float zoom = exp(log(12.0) * smoothstep(0.3, 0.7, uProgress));
     float aspect = uResolution.x / uResolution.y;
-    float baseScale = min(1.01, aspect * 1.08);
+    float baseScale = min(1.001, aspect * 1.08);
     vec2 anchor = mix(vec2(0.5), vec2(0.5, 1.0 - 340.0 / 520.0), smoothstep(0.28, 0.68, uProgress));
     vec2 uv = anchor + (vUv - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
     float inside = shapeAt(uv);
@@ -49,8 +50,15 @@ const fragmentShader = `
     float neighbors = (shapeAt(uv + vec2(edge.x, 0.0)) + shapeAt(uv - vec2(edge.x, 0.0))
       + shapeAt(uv + vec2(0.0, edge.y)) + shapeAt(uv - vec2(0.0, edge.y))) * 0.25;
     float shadow = max(0.0, inside - neighbors) * 0.7;
-    float alpha = clamp(1.0 - inside + shadow, 0.0, 1.0) * uOpacity;
-    gl_FragColor = vec4(mix(vec3(1.0), vec3(0.12), shadow), alpha);
+    float trail = texture2D(uTrailTexture, vUv).a * (1.0 - smoothstep(0.18, 0.45, uProgress));
+    float grain = fract(sin(dot(floor(gl_FragCoord.xy * 0.75), vec2(12.9898, 78.233))) * 43758.5453);
+    float edgeDust = clamp(abs(inside - neighbors) * 3.0, 0.0, 1.0) * step(0.34, trail * grain);
+    float spray = (1.0 - inside) * step(0.48, trail * grain);
+    float rightLeg = inside * smoothstep(0.64, 0.72, uv.x) * smoothstep(0.20, 0.32, uv.y)
+      * (1.0 - smoothstep(0.76, 0.82, uv.y)) * (1.0 - smoothstep(0.06, 0.28, uProgress));
+    rightLeg *= 1.0 - step(0.32, trail * grain);
+    float alpha = clamp(1.0 - inside + shadow + rightLeg - edgeDust * 0.7, 0.0, 1.0) * uOpacity;
+    gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), max(max(shadow, spray), rightLeg)), alpha);
   }
 `
 
@@ -100,9 +108,27 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     maskTexture.minFilter = THREE.LinearFilter
   }
 
+  const trailCanvas = document.createElement('canvas')
+  const trailContext = trailCanvas.getContext('2d')
+  const trailTexture = new THREE.CanvasTexture(trailCanvas)
+  trailTexture.generateMipmaps = false
+  trailTexture.minFilter = THREE.LinearFilter
+  const stampCanvas = document.createElement('canvas')
+  stampCanvas.width = stampCanvas.height = 64
+  const stampContext = stampCanvas.getContext('2d')
+  if (stampContext) {
+    const gradient = stampContext.createRadialGradient(32, 32, 0, 32, 32, 32)
+    gradient.addColorStop(0, 'rgba(255,255,255,0.9)')
+    gradient.addColorStop(0.35, 'rgba(255,255,255,0.55)')
+    gradient.addColorStop(1, 'rgba(255,255,255,0)')
+    stampContext.fillStyle = gradient
+    stampContext.fillRect(0, 0, 64, 64)
+  }
+
   const maskMaterial = new THREE.ShaderMaterial({
     uniforms: {
-      uTexture: { value: maskTexture || placeholder },
+      uMaskTexture: { value: maskTexture || placeholder },
+      uTrailTexture: { value: trailTexture },
       uHasTexture: { value: maskTexture ? 1 : 0 },
       uProgress: { value: 0 },
       uOpacity: { value: 1 },
@@ -145,6 +171,22 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     panels.push(panel)
   }
 
+  const collageTiles = [[0, -8, 1], [3, 0, -1], [2, 8, 1]]
+  const collagePanels = collageTiles.map(([tile, x, y], index) => {
+    const panel = new THREE.Mesh(photoGeometry(tile), new THREE.MeshBasicMaterial({
+      map: atlasTexture,
+      color: atlasTexture ? 0xffffff : fallbackColors[tile],
+      side: THREE.DoubleSide,
+      transparent: true,
+      depthWrite: false,
+      toneMapped: false,
+    }))
+    panel.position.set(x * (compact ? 0.5 : 1), y * (compact ? 0.75 : 1), -10)
+    panel.rotation.y = (index - 1) * 0.12
+    scene.add(panel)
+    return panel
+  })
+
   const artifactGeometry = new THREE.IcosahedronGeometry(3.5, 2)
   const positions = artifactGeometry.attributes.position
   for (let i = 0; i < positions.count; i++) {
@@ -167,17 +209,45 @@ function makeTunnel(root, maskTexture, atlasTexture) {
 
   const state = { progress: 0, cameraZ: 15 }
   const pointer = { x: 0, y: 0 }
+  const trailPointer = { x: 0, y: 0, targetX: 0, targetY: 0, velocity: 0, active: false, life: 0 }
   let active = true
   let elapsed = 0
+  const paintTrail = () => {
+    if (!trailContext || !stampContext || (!trailPointer.active && trailPointer.life === 0)) return
+    trailContext.globalCompositeOperation = 'destination-in'
+    trailContext.fillStyle = 'rgba(0,0,0,0.92)'
+    trailContext.fillRect(0, 0, trailCanvas.width, trailCanvas.height)
+    trailContext.globalCompositeOperation = 'source-over'
+    if (trailPointer.active) {
+      const fromX = trailPointer.x
+      const fromY = trailPointer.y
+      trailPointer.x += (trailPointer.targetX - fromX) * 0.35
+      trailPointer.y += (trailPointer.targetY - fromY) * 0.35
+      const distance = Math.hypot(trailPointer.x - fromX, trailPointer.y - fromY)
+      const radius = Math.min(trailCanvas.width, trailCanvas.height) * 0.055 + Math.min(12, trailPointer.velocity * 0.08)
+      const steps = Math.max(1, Math.ceil(distance / (radius * 0.4)))
+      for (let i = 1; i <= steps; i++) {
+        const x = fromX + (trailPointer.x - fromX) * i / steps
+        const y = fromY + (trailPointer.y - fromY) * i / steps
+        trailContext.drawImage(stampCanvas, x - radius, y - radius, radius * 2, radius * 2)
+      }
+      trailPointer.velocity *= 0.8
+      trailPointer.life = 90
+    } else trailPointer.life--
+    trailTexture.needsUpdate = true
+  }
   const render = time => {
     camera.position.z = state.cameraZ
     camera.position.x += (pointer.x - camera.position.x) * 0.08
     camera.position.y += (pointer.y - camera.position.y) * 0.08
     camera.lookAt(0, 0, camera.position.z - 100)
     artifact.rotation.set(time * 0.07, time * 0.11, time * 0.035)
+    const collageOpacity = 1 - smoothstep(0.08, 0.34, state.progress)
+    collagePanels.forEach(panel => { panel.material.opacity = collageOpacity })
     maskMaterial.uniforms.uProgress.value = state.progress
     maskMaterial.uniforms.uOpacity.value = 1 - smoothstep(0.65, 0.8, state.progress)
     hero.style.setProperty('--landing-copy', (1 - smoothstep(0.08, 0.36, state.progress)).toFixed(3))
+    paintTrail()
     renderer.render(scene, camera)
   }
   const resize = () => {
@@ -186,6 +256,13 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     if (!width || !height) return
     const narrow = width < 760
     panels.forEach((panel, index) => panel.position.set(poses[index][0] * (narrow ? 0.5 : 1), poses[index][1] * (narrow ? 0.75 : 1), poses[index][2]))
+    collagePanels.forEach((panel, index) => panel.position.set(collageTiles[index][1] * (narrow ? 0.5 : 1), collageTiles[index][2] * (narrow ? 0.75 : 1), -10))
+    const trailScale = Math.min(1, 512 / Math.max(width, height))
+    trailCanvas.width = Math.max(1, Math.round(width * trailScale))
+    trailCanvas.height = Math.max(1, Math.round(height * trailScale))
+    trailPointer.active = false
+    trailPointer.life = 0
+    trailTexture.needsUpdate = true
     camera.aspect = width / height
     camera.updateProjectionMatrix()
     const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
@@ -198,10 +275,24 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   const move = event => {
     if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return
     const bounds = hero.getBoundingClientRect()
-    pointer.x = ((event.clientX - bounds.left) / bounds.width - 0.5) * 1.2
-    pointer.y = (0.5 - (event.clientY - bounds.top) / bounds.height) * 0.8
+    const x = clamp((event.clientX - bounds.left) / bounds.width)
+    const y = clamp((event.clientY - bounds.top) / bounds.height)
+    pointer.x = x - 0.5
+    pointer.y = 0.5 - y
+    const trailX = x * trailCanvas.width
+    const trailY = y * trailCanvas.height
+    if (!trailPointer.active) {
+      trailPointer.x = trailX
+      trailPointer.y = trailY
+      trailPointer.targetX = trailX
+      trailPointer.targetY = trailY
+    }
+    trailPointer.velocity = Math.hypot(trailX - trailPointer.targetX, trailY - trailPointer.targetY)
+    trailPointer.targetX = trailX
+    trailPointer.targetY = trailY
+    trailPointer.active = true
   }
-  const leave = () => { pointer.x = 0; pointer.y = 0 }
+  const leave = () => { pointer.x = 0; pointer.y = 0; trailPointer.active = false }
 
   resize()
   const lenis = new Lenis({ anchors: true })
@@ -224,7 +315,16 @@ function makeTunnel(root, maskTexture, atlasTexture) {
       end: '+=2500',
       scrub: true,
       anticipatePin: 1,
-      onToggle: self => { active = self.isActive; if (active) render(elapsed) },
+      onToggle: self => {
+        active = self.isActive
+        if (active) render(elapsed)
+        else {
+          trailPointer.active = false
+          trailPointer.life = 0
+          trailContext?.clearRect(0, 0, trailCanvas.width, trailCanvas.height)
+          trailTexture.needsUpdate = true
+        }
+      },
     },
   })
   timeline
@@ -250,11 +350,12 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     hero.removeEventListener('pointerleave', leave)
     hero.style.removeProperty('--landing-copy')
     root.classList.remove('landing-morph--ready')
-    for (const panel of panels) { panel.geometry.dispose(); panel.material.dispose() }
+    for (const panel of [...panels, ...collagePanels]) { panel.geometry.dispose(); panel.material.dispose() }
     artifactGeometry.dispose()
     artifactMaterial.dispose()
     maskGeometry.dispose()
     maskMaterial.dispose()
+    trailTexture.dispose()
     maskTexture?.dispose()
     atlasTexture?.dispose()
     placeholder.dispose()
