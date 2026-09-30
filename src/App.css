@@ -60,6 +60,7 @@ button:active:not(:disabled) { transform: scale(.97); }
 .landing-header nav a:hover, .landing-header nav button:hover { color: var(--blue); }
 .landing-header nav button svg { transition: transform var(--motion-standard) var(--motion-ease); }
 .landing-header nav button:hover svg { transform: translateX(4px); }
+.landing-intro { background: #061b18; }
 .landing-hero { position: relative; height: 100svh; background: var(--paper-bright); overflow: hidden; }
 .landing-morph { position: absolute; inset: 0; pointer-events: none; }
 .landing-morph canvas { width: 100%; height: 100%; display: block; }
