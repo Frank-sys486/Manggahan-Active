@@ -133,11 +133,11 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
       opacity: !plane ? item.userData.restingOpacity : item === plane ? 1 : 0.08,
       duration: 0.18, ease: 'power2.out', overwrite: true,
     }))
-    gsap.to(logo, { autoAlpha: plane ? 0 : 1, scale: plane ? 0.9 : 1, duration: 0.18, overwrite: true })
+    gsap.to(logo, { autoAlpha: plane ? 0 : 1, scale: plane ? 0.9 : 1, delay: plane ? 0.15 : 0, duration: 0.18, overwrite: true })
     gsap.killTweensOf(title)
     if (plane) {
       gsap.to(title, {
-        autoAlpha: 0, y: 8, duration: 0.06,
+        autoAlpha: 0, y: 8, delay: 0.15, duration: 0.06,
         onComplete: () => {
           title.textContent = sports[plane.userData.sport].name
           gsap.to(title, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power2.out' })
