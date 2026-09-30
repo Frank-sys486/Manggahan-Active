@@ -1,4 +1,8 @@
 import * as THREE from 'three'
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import { gsap } from 'gsap'
 import atlasUrl from './assets/sports-atlas.jpg'
 
@@ -27,6 +31,29 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   scene.background = new THREE.Color('#061b18')
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 80)
   camera.rotation.order = 'YXZ'
+  const composer = new EffectComposer(renderer)
+  composer.addPass(new RenderPass(scene, camera))
+  const blurPass = new ShaderPass({
+    uniforms: { tDiffuse: { value: null }, uVelocity: { value: new THREE.Vector2() } },
+    vertexShader: `varying vec2 vUv;
+      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `uniform sampler2D tDiffuse;
+      uniform vec2 uVelocity;
+      varying vec2 vUv;
+      void main() {
+        vec4 color = texture2D(tDiffuse, vUv) * 0.4;
+        color += texture2D(tDiffuse, clamp(vUv - uVelocity, vec2(0.0), vec2(1.0))) * 0.2;
+        color += texture2D(tDiffuse, clamp(vUv + uVelocity, vec2(0.0), vec2(1.0))) * 0.2;
+        color += texture2D(tDiffuse, clamp(vUv - uVelocity * 2.0, vec2(0.0), vec2(1.0))) * 0.1;
+        color += texture2D(tDiffuse, clamp(vUv + uVelocity * 2.0, vec2(0.0), vec2(1.0))) * 0.1;
+        gl_FragColor = color;
+      }`,
+  })
+  composer.addPass(blurPass)
+  const outputPass = new OutputPass()
+  composer.addPass(outputPass)
+  const previousCameraPosition = camera.position.clone()
+  let previousCameraYaw = camera.rotation.y
   const wallGeometry = new THREE.CylinderGeometry(19, 19, 30, 64, 1, true)
   const wallMaterial = new THREE.MeshBasicMaterial({ color: '#061b18', side: THREE.BackSide })
   scene.add(new THREE.Mesh(wallGeometry, wallMaterial))
@@ -167,8 +194,13 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     if (!width || !height) return
     camera.aspect = width / height
     camera.updateProjectionMatrix()
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, width < 760 ? 1.25 : 1.5))
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, width < 760 ? 1.25 : 1.5)
+    renderer.setPixelRatio(pixelRatio)
     renderer.setSize(width, height, false)
+    composer.setPixelRatio(pixelRatio)
+    composer.setSize(width, height)
+    previousCameraPosition.copy(camera.position)
+    previousCameraYaw = camera.rotation.y
     scene.updateMatrixWorld(true)
     leave()
     renderer.render(scene, camera)
@@ -182,7 +214,14 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     camera.position.z += (-sideways * Math.sin(camera.rotation.y) - camera.position.z) * ease
     camera.position.y += ((pointerInside ? pointer.y * 6 : 0) - camera.position.y) * ease
     if (pointerInside) highlight(pick())
-    renderer.render(scene, camera)
+    blurPass.uniforms.uVelocity.value.set(
+      THREE.MathUtils.clamp((camera.rotation.y - previousCameraYaw) * 0.05 + (camera.position.x - previousCameraPosition.x) * 0.008, -0.012, 0.012),
+      THREE.MathUtils.clamp((camera.position.y - previousCameraPosition.y) * 0.008, -0.012, 0.012),
+    )
+    previousCameraPosition.copy(camera.position)
+    previousCameraYaw = camera.rotation.y
+    if (blurPass.uniforms.uVelocity.value.lengthSq() > 0.00000025) composer.render()
+    else renderer.render(scene, camera)
   }
   const observer = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
@@ -210,6 +249,9 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     rimGeometry.dispose()
     rimMaterial.dispose()
     texture.dispose()
+    blurPass.dispose()
+    outputPass.dispose()
+    composer.dispose()
     renderer.dispose()
     canvas.remove()
     host.classList.remove('is-gallery-ready')
