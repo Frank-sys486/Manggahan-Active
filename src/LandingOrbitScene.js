@@ -24,11 +24,11 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   canvasHost.appendChild(canvas)
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color('#0A1612')
+  scene.background = new THREE.Color('#061b18')
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 80)
   camera.rotation.order = 'YXZ'
   const wallGeometry = new THREE.CylinderGeometry(19, 19, 16, 64, 1, true)
-  const wallMaterial = new THREE.MeshBasicMaterial({ color: '#12291f', side: THREE.BackSide })
+  const wallMaterial = new THREE.MeshBasicMaterial({ color: '#061b18', side: THREE.BackSide })
   scene.add(new THREE.Mesh(wallGeometry, wallMaterial))
   const rimGeometry = new THREE.TorusGeometry(18.95, 0.025, 6, 96)
   const rimMaterial = new THREE.MeshBasicMaterial({ color: '#f2c94c', transparent: true, opacity: 0.18 })
@@ -51,19 +51,20 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     }
     return geometry
   })
-  // Three staggered rows wrap the viewer; each card faces inward.
-  const planes = Array.from({ length: 36 }, (_, index) => {
+  // Four staggered rows wrap the viewer; each card faces inward.
+  const planes = Array.from({ length: 72 }, (_, index) => {
     const sport = index < sports.length ? index : Math.floor(Math.random() * sports.length)
+    const row = Math.floor(index / 18)
     const plane = new THREE.Mesh(geometries[sport], new THREE.MeshBasicMaterial({
       map: texture, transparent: true, opacity: 0.45, depthWrite: false, toneMapped: false,
       side: THREE.DoubleSide,
     }))
     plane.userData = {
       sport,
-      angle: ((index % 12 + (Math.random() - 0.5) * 0.65) / 12) * Math.PI * 2,
-      height: (Math.floor(index / 12) - 1) * 4.3 + (Math.random() - 0.5) * 0.9,
-      radius: 13.5 + Math.random() * 2.5,
-      size: 3.2 + Math.random() * 0.8,
+      angle: ((index % 18 + row % 2 * 0.5 + (Math.random() - 0.5) * 0.25) / 18) * Math.PI * 2,
+      height: (row - 1.5) * 3.5 + (Math.random() - 0.5) * 0.5,
+      radius: 13.5 + Math.random() * 2.2,
+      size: 3.7 + Math.random() * 0.6,
     }
     plane.position.set(
       Math.sin(plane.userData.angle) * plane.userData.radius,
