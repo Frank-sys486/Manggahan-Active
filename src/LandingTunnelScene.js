@@ -95,7 +95,7 @@ const fragmentShader = `
     float insideEdge = smoothstep(0.04, 0.32, max(inside - neighbors, 0.0));
     float outsideEdge = smoothstep(0.02, 0.27, max(neighbors - inside, 0.0));
     float whiteErosion = clamp(inside * insideEdge * (particles * 0.75 + activity * coarseGrain * 0.10)
-      + rightLeg * particles * 0.45 + inside * particles * 0.20, 0.0, 0.85);
+      + inside * particles * 0.65, 0.0, 0.85);
     float outsideDust = outsideEdge * particles * 0.55;
     float alpha = clamp(1.0 - inside + shadow + rightLeg + whiteErosion, 0.0, 1.0) * uOpacity;
     float ink = clamp((shadow + rightLeg) * (1.0 - whiteErosion) + outsideDust, 0.0, 1.0);
