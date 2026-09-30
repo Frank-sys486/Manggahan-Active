@@ -266,6 +266,9 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     scene.background.copy(tunnelBackground).lerp(orbitBackground, smoothstep(0.8, 0.92, state.progress))
     hero.style.opacity = (1 - smoothstep(0.90, 1, state.progress)).toFixed(3)
     hero.style.pointerEvents = state.progress >= 0.9 ? 'none' : ''
+    if (hero.parentElement?.classList.contains('pin-spacer')) {
+      hero.parentElement.style.pointerEvents = hero.style.pointerEvents
+    }
     hoverStrength *= Math.exp(-delta / 0.16)
     maskMaterial.uniforms.uHover.value = hoverStrength
     hero.style.setProperty('--landing-copy', (1 - smoothstep(0.08, 0.36, state.progress)).toFixed(3))
@@ -373,6 +376,9 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   root.classList.add('landing-morph--ready')
 
   return () => {
+    if (hero.parentElement?.classList.contains('pin-spacer')) {
+      hero.parentElement.style.removeProperty('pointer-events')
+    }
     timeline.scrollTrigger?.kill()
     timeline.kill()
     gsap.ticker.remove(tick)
