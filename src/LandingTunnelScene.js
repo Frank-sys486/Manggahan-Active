@@ -41,7 +41,7 @@ const fragmentShader = `
   void main() {
     float zoom = exp(log(12.0) * smoothstep(0.3, 0.7, uProgress));
     float aspect = uResolution.x / uResolution.y;
-    float baseScale = min(1.6, aspect * 1.08);
+    float baseScale = min(1.01, aspect * 1.08);
     vec2 anchor = mix(vec2(0.5), vec2(0.5, 1.0 - 340.0 / 520.0), smoothstep(0.28, 0.68, uProgress));
     vec2 uv = anchor + (vUv - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
     float inside = shapeAt(uv);
@@ -84,9 +84,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   try {
 
   const scene = new THREE.Scene()
-  const white = new THREE.Color('#ffffff')
-  const black = new THREE.Color('#050505')
-  scene.background = white.clone()
+  scene.background = new THREE.Color('#050505')
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 300)
   camera.position.z = 15
   scene.add(camera)
@@ -167,7 +165,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   keyLight.position.set(-5, 7, 5)
   scene.add(keyLight)
 
-  const state = { progress: 0, cameraZ: 15, background: 0 }
+  const state = { progress: 0, cameraZ: 15 }
   const pointer = { x: 0, y: 0 }
   let active = true
   let elapsed = 0
@@ -179,7 +177,6 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     artifact.rotation.set(time * 0.07, time * 0.11, time * 0.035)
     maskMaterial.uniforms.uProgress.value = state.progress
     maskMaterial.uniforms.uOpacity.value = 1 - smoothstep(0.65, 0.8, state.progress)
-    scene.background.copy(white).lerp(black, state.background)
     hero.style.setProperty('--landing-copy', (1 - smoothstep(0.08, 0.36, state.progress)).toFixed(3))
     renderer.render(scene, camera)
   }
@@ -233,7 +230,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   timeline
     .to(state, { cameraZ: 5, progress: 0.3, duration: 0.3 })
     .to(state, { cameraZ: -50, progress: 0.7, duration: 0.4 })
-    .to(state, { cameraZ: -78, progress: 1, background: 1, duration: 0.3 })
+    .to(state, { cameraZ: -78, progress: 1, duration: 0.3 })
 
   window.addEventListener('resize', resize)
   hero.addEventListener('pointermove', move)
