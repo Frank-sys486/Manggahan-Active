@@ -265,7 +265,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     maskMaterial.uniforms.uOpacity.value = 1 - smoothstep(0.65, 0.8, state.progress)
     scene.background.copy(tunnelBackground).lerp(orbitBackground, smoothstep(0.8, 0.92, state.progress))
     hero.style.opacity = (1 - smoothstep(0.90, 1, state.progress)).toFixed(3)
-    hero.style.pointerEvents = state.progress >= 0.999 ? 'none' : ''
+    hero.style.pointerEvents = state.progress >= 0.9 ? 'none' : ''
     hoverStrength *= Math.exp(-delta / 0.16)
     maskMaterial.uniforms.uHover.value = hoverStrength
     hero.style.setProperty('--landing-copy', (1 - smoothstep(0.08, 0.36, state.progress)).toFixed(3))
