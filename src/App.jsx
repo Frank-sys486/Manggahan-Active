@@ -263,26 +263,26 @@ function LandingOrbit({ onEnter }) {
     const section = sectionRef.current
     const scene = section.firstElementChild
     const stage = scene.querySelector('.landing-orbit__cards')
-    const cards = [...stage.children]
-    const poses = [
-      [-60, -22, 140, -13, -5], [8, -38, -80, 6, 3], [62, -16, 120, 14, 5],
-      [-54, 28, 80, -12, 4], [0, 38, 170, 5, -4], [58, 24, -65, 13, 5],
-    ]
-    const target = { reveal: 0, flat: 0, x: 0, y: 0 }
+    const cards = [...stage.querySelectorAll('.landing-orbit__card')]
+    const target = { reveal: 0, turn: 0, x: 0, y: 0 }
     const current = { ...target }
     const clamp = value => Math.max(0, Math.min(1, value))
     let frame = 0
+    let radius = 0
+    let depth = 0
+    let rise = 0
+    stage.classList.add('is-orbit')
 
     const draw = () => {
       frame = 0
       for (const key of Object.keys(current)) current[key] += (target[key] - current[key]) * 0.16
-      const spread = 1 - current.flat
       stage.style.transform = `rotateX(${-current.y * 4}deg) rotateY(${current.x * 6}deg)`
       cards.forEach((card, index) => {
-        const [x, y, z, yaw, roll] = poses[index]
+        const angle = index / cards.length * Math.PI * 2 + current.turn + Math.PI / 6
+        const front = (Math.cos(angle) + 1) / 2
         const arrival = clamp((current.reveal - index * 0.045) / 0.78)
-        card.style.opacity = arrival.toFixed(3)
-        card.style.transform = `translate3d(${x * spread}px, ${y * spread}px, ${z * spread - (1 - arrival) * 180}px) rotateY(${yaw * spread}deg) rotateZ(${roll * spread}deg) scale(${0.88 + arrival * 0.12})`
+        card.style.opacity = (arrival * (0.55 + front * 0.45)).toFixed(3)
+        card.style.transform = `translate(-50%, -50%) translate3d(${Math.sin(angle) * radius}px, ${Math.cos(angle) * rise}px, ${Math.cos(angle) * depth - (1 - arrival) * 180}px) rotateY(${-Math.sin(angle) * 24}deg) scale(${0.88 + arrival * 0.12})`
       })
       if (Object.keys(current).some(key => Math.abs(current[key] - target[key]) > 0.002)) schedule()
     }
@@ -290,10 +290,15 @@ function LandingOrbit({ onEnter }) {
     const measure = () => {
       const rect = section.getBoundingClientRect()
       target.reveal = clamp((window.innerHeight - rect.top) / (window.innerHeight * 0.72))
-      const settleStart = window.innerHeight * 0.55
-      target.flat = clamp((-rect.top - settleStart) / Math.max(1, section.offsetHeight - scene.offsetHeight - settleStart))
+      target.turn = clamp(-rect.top / Math.max(1, section.offsetHeight - scene.offsetHeight)) * Math.PI * 2
       scene.style.opacity = clamp(scene.getBoundingClientRect().bottom / window.innerHeight).toFixed(3)
       schedule()
+    }
+    const resize = () => {
+      radius = Math.max(0, (stage.clientWidth - cards[0].offsetWidth * 1.5) / 2)
+      depth = Math.min(280, stage.clientWidth * 0.25)
+      rise = Math.min(140, stage.clientHeight * 0.27)
+      measure()
     }
     const move = event => {
       if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return
@@ -303,11 +308,20 @@ function LandingOrbit({ onEnter }) {
       schedule()
     }
     const leave = () => { target.x = 0; target.y = 0; schedule() }
+    const focus = event => {
+      const index = cards.indexOf(event.target)
+      if (index < 0 || !event.target.matches(':focus-visible')) return
+      // Bring keyboard-selected cards to the front via the shortest arc.
+      const angle = index / cards.length * Math.PI * 2 + current.turn + Math.PI / 6
+      target.turn = current.turn - Math.atan2(Math.sin(angle), Math.cos(angle))
+      schedule()
+    }
     window.addEventListener('scroll', measure, { passive: true })
-    window.addEventListener('resize', measure)
+    window.addEventListener('resize', resize)
     scene.addEventListener('pointermove', move)
     scene.addEventListener('pointerleave', leave)
-    measure()
+    stage.addEventListener('focusin', focus)
+    resize()
     cancelAnimationFrame(frame)
     frame = 0
     Object.assign(current, target)
@@ -315,9 +329,13 @@ function LandingOrbit({ onEnter }) {
     return () => {
       cancelAnimationFrame(frame)
       window.removeEventListener('scroll', measure)
-      window.removeEventListener('resize', measure)
+      window.removeEventListener('resize', resize)
       scene.removeEventListener('pointermove', move)
       scene.removeEventListener('pointerleave', leave)
+      stage.removeEventListener('focusin', focus)
+      stage.classList.remove('is-orbit')
+      stage.style.removeProperty('transform')
+      cards.forEach(card => { card.style.removeProperty('transform'); card.style.removeProperty('opacity') })
       scene.style.removeProperty('opacity')
     }
   }, [])
@@ -327,6 +345,7 @@ function LandingOrbit({ onEnter }) {
       <div className="landing-orbit__scene">
         <div className="landing-orbit__heading"><h2 id="orbit-title">Move into<br />the game.</h2><p>Six sports. One place to play.</p></div>
         <div className="landing-orbit__cards">
+          <div className="landing-orbit__core" aria-hidden="true"><LandingGlyph /></div>
           {facilitySeed.map((facility, index) => (
             <button key={facility.id} className="landing-orbit__card" type="button" onClick={onEnter} aria-label={`Sign in to book ${facility.name}`}>
               <span className="landing-orbit__photo" style={{ '--tile-x': `${index % 3 * 50}%`, '--tile-y': `${Math.floor(index / 3) * 100}%` }} aria-hidden="true" />
