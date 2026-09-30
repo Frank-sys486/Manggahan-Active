@@ -73,11 +73,9 @@ const fragmentShader = `
     float pointerDistance = length((vUv - uPointer) * uResolution);
     float hover = (1.0 - smoothstep(0.0, 58.0, pointerDistance)) * uHover * pointerInside * hoverFade;
     float activity = max(hover, trail * 0.75);
-    float rightLeg = inside * smoothstep(0.64, 0.72, uv.x) * smoothstep(0.20, 0.32, uv.y)
-      * (1.0 - smoothstep(0.76, 0.82, uv.y)) * (1.0 - smoothstep(0.06, 0.28, uProgress));
     if (activity < 0.005) {
-      float alpha = clamp(1.0 - inside + shadow + rightLeg, 0.0, 1.0) * uOpacity;
-      gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), clamp(shadow + rightLeg, 0.0, 1.0)), alpha);
+      float alpha = clamp(1.0 - inside + shadow, 0.0, 1.0) * uOpacity;
+      gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), shadow), alpha);
       return;
     }
     vec2 pixel = gl_FragCoord.xy;
@@ -95,8 +93,8 @@ const fragmentShader = `
     float outsideEdge = smoothstep(0.02, 0.27, max(neighbors - inside, 0.0));
     float whiteErosion = clamp(inside * particles * 0.65, 0.0, 0.85);
     float outsideDust = outsideEdge * particles * 0.55;
-    float alpha = clamp(1.0 - inside + shadow + rightLeg + whiteErosion, 0.0, 1.0) * uOpacity;
-    float ink = clamp((shadow + rightLeg) * (1.0 - whiteErosion) + outsideDust, 0.0, 1.0);
+    float alpha = clamp(1.0 - inside + shadow + whiteErosion, 0.0, 1.0) * uOpacity;
+    float ink = clamp(shadow * (1.0 - whiteErosion) + outsideDust, 0.0, 1.0);
     gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), ink), alpha);
   }
 `
