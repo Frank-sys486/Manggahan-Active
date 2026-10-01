@@ -516,6 +516,71 @@ td { font-variant-numeric: tabular-nums; }
   .staff-toolbar label, .staff-availability label { width: 100%; }
 }
 
+@media (max-width: 600px), (max-width: 900px) and (max-height: 500px) {
+  .app-shell .topbar { grid-template-columns: minmax(0, 1fr) auto; padding-inline: 16px; }
+  .app-shell .brand { min-width: 0; min-height: 54px; }
+  .app-shell .brand strong { font-size: 1.35rem; }
+  .app-shell .brand small, .app-shell .account-menu span { display: none; }
+  .app-shell .account-menu { grid-column: 2; grid-row: 1; min-height: 0; padding: 0; border: 0; }
+  .app-shell .primary-nav { grid-column: 1 / -1; grid-row: 2; overflow: visible; }
+  .app-shell .primary-nav button { flex: 1; min-width: 0; min-height: 48px; justify-content: center; padding-inline: 4px; font-size: .8rem; white-space: nowrap; }
+  .app-shell .primary-nav button svg { display: none; }
+  .app-shell .date-board { grid-template-columns: 1fr; min-height: 0; }
+  .app-shell .date-mantra { display: none; }
+  .app-shell .date-focus { min-height: 58px; padding: 6px 16px; }
+  .app-shell .date-focus > button { width: 44px; height: 44px; }
+  .app-shell .date-focus p { gap: 5px; }
+  .app-shell .date-focus p strong { font-size: clamp(2.35rem, 11vw, 3rem); }
+  .app-shell .date-focus p span:last-child { display: none; }
+  .app-shell .week-strip { grid-column: auto; width: 100%; min-width: 0; min-height: 0; overflow-x: auto; grid-template-columns: repeat(7, 64px); scrollbar-width: none; }
+  .app-shell .week-strip::-webkit-scrollbar { display: none; }
+  .app-shell .week-strip button { min-width: 64px; min-height: 50px; padding: 4px; }
+  .app-shell .schedule-scroll { overflow-x: hidden; overflow-y: auto; border-top: 3px solid var(--court); }
+  .app-shell .time-row { display: none; }
+  .app-shell .facility-lane { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+  .app-shell .facility-name { position: relative; left: auto; z-index: 1; min-height: 64px; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 10px 16px; border-right: 0; box-shadow: none; }
+  .app-shell .facility-name > svg { width: 36px; height: 36px; }
+  .app-shell .facility-name > span:nth-child(2) { padding-right: 30px; }
+  .app-shell .facility-title { font-size: 1.48rem; }
+  .app-shell .facility-expand { right: 16px; bottom: 50%; transform: translateY(50%); }
+  .app-shell .slot-track { grid-column: auto; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(150px, 48vw); overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .app-shell .slot-track::-webkit-scrollbar { display: none; }
+  .app-shell .slot-track .court-lines { display: none; }
+  .app-shell .slot { min-height: 88px; justify-content: flex-start; gap: 8px; padding: 12px; scroll-snap-align: start; }
+  .app-shell .slot strong { font-size: 1.08rem; }
+  .app-shell .slot small { font-size: .72rem; }
+  .app-shell .slot .status-mark { width: 24px; height: 24px; }
+  .app-shell .slot .status-mark--open { border-width: 3px; }
+  .app-shell .facility-focus { position: relative; left: auto; width: 100%; }
+  .app-shell .facility-focus__content { grid-template-columns: 1fr; min-height: 0; }
+  .app-shell .court-preview { height: 170px; min-height: 170px; }
+  .app-shell .facility-focus__copy { padding: 18px 16px 24px; }
+  .app-shell .facility-focus__copy h3 { font-size: 2.5rem; }
+  .app-shell .facility-focus__copy ul { grid-template-columns: 1fr; }
+  .app-shell .legend { display: none; }
+  .app-shell .booking-bar { position: static; flex: none; grid-template-columns: minmax(0, 1fr) auto; gap: 5px; padding: 10px 16px max(12px, env(safe-area-inset-bottom)); }
+  .app-shell .selection-label { display: none; }
+  .app-shell .booking-item { min-height: 0; padding: 0; border: 0; gap: 0; }
+  .app-shell .booking-item--facility { grid-column: 1 / -1; }
+  .app-shell .booking-item--facility .sport-mark, .app-shell .booking-item > svg { display: none; }
+  .app-shell .booking-item strong { font-size: 1.17rem; line-height: 1; }
+  .app-shell .booking-item small { display: none; }
+  .app-shell .booking-item:nth-of-type(2) strong { font-family: var(--font-body); font-size: .8rem; font-weight: 600; text-transform: none; white-space: nowrap; }
+  .app-shell .booking-item:nth-of-type(4) { display: flex; gap: 5px; }
+  .app-shell .booking-item--status .status-mark { width: 18px; height: 18px; }
+  .app-shell .booking-item--status .status-mark--open { border-width: 3px; }
+  .app-shell .booking-item--status strong { font-size: .85rem; }
+  .app-shell .booking-bar .primary-button { grid-column: 1 / -1; width: 100%; min-height: 44px; margin: 6px 0 0; }
+  .app-shell .booking-panel { position: static; flex: none; max-height: 60dvh; overflow-y: auto; gap: 10px; padding: 12px 16px max(14px, env(safe-area-inset-bottom)); }
+  .app-shell .booking-panel__intro { gap: 8px; }
+  .app-shell .booking-panel h2 { font-size: 1.5rem; }
+  .app-shell .booking-panel p { font-size: .78rem; line-height: 1.3; }
+  .app-shell .booking-panel form { gap: 9px; }
+  .app-shell .booking-panel label { gap: 4px; }
+  .app-shell .booking-panel input, .app-shell .booking-panel select { min-height: 44px; font-size: 16px; }
+  .app-shell .booking-panel .primary-button { min-height: 44px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .landing-orbit { height: auto; }
