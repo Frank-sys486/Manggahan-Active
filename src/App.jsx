@@ -261,11 +261,19 @@ function StatusMark({ status }) {
 
 function LandingOrbit() {
   const sectionRef = useRef(null)
+  const [revealedSport, setRevealedSport] = useState(null)
 
   const explore = index => {
     const court = document.querySelectorAll('.landing-sport')[index]
     court?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' })
     court?.focus({ preventScroll: true })
+  }
+  const activate = index => {
+    if (window.matchMedia('(hover: none)').matches && revealedSport !== index) {
+      setRevealedSport(index)
+      return
+    }
+    explore(index)
   }
 
   useEffect(() => {
@@ -308,7 +316,7 @@ function LandingOrbit() {
         <span className="landing-orbit__cursor" aria-hidden="true">→ Learn more</span>
         <div className="landing-orbit__cards">
           {facilitySeed.map((facility, index) => (
-            <button key={facility.id} className="landing-orbit__card" type="button" onClick={() => explore(index)} aria-label={`Learn more about ${facility.name}`}>
+            <button key={facility.id} className={`landing-orbit__card ${revealedSport === index ? 'is-revealed' : ''}`} type="button" onClick={() => activate(index)} aria-label={`Learn more about ${facility.name}`}>
               <span className="landing-orbit__photo" style={{ '--tile-x': `${index % 3 * 50}%`, '--tile-y': `${Math.floor(index / 3) * 100}%` }} aria-hidden="true" />
               <span className="landing-orbit__label"><SportMark sport={facility.sport} size={26} /><strong>{facility.name}</strong><LineIcon name="arrow" size={19} /></span>
             </button>
