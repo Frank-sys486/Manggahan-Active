@@ -462,7 +462,7 @@ function makeTunnel(root, maskTexture, atlasTexture, handoffScale) {
     reveal(onComplete) {
       revealTween?.kill()
       revealTween = gsap.timeline({ onUpdate: () => render(elapsed), onComplete })
-        .to(maskMaterial.uniforms.uEntranceScale, { value: 1, duration: 0.75, ease: 'power2.inOut' })
+        .to(maskMaterial.uniforms.uEntranceScale, { value: 1, duration: 0.75, ease: 'power4.out' })
         .to(maskMaterial.uniforms.uRevealProgress, { value: 1, duration: 0.85, ease: 'power2.inOut' })
     },
     dispose,
@@ -475,7 +475,7 @@ function makeTunnel(root, maskTexture, atlasTexture, handoffScale) {
   }
 }
 
-export async function mountLandingTunnel(root, signal, onProgress = () => {}, handoffScale = 0.82) {
+export async function mountLandingTunnel(root, signal, onProgress = () => {}, handoffScale = 0.92) {
   const manager = new THREE.LoadingManager()
   manager.onProgress = (_url, loaded, total) => onProgress(Math.round(loaded / total * 100))
   const [maskTexture, atlasTexture] = await Promise.all([loadTexture(maskUrl, manager), loadTexture(atlasUrl, manager)])
