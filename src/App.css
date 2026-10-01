@@ -131,7 +131,8 @@ button:active:not(:disabled) { transform: scale(.97); }
 .landing-process { color: var(--paper); background: var(--court-strong); }
 .landing-process .landing-section-heading p { color: #cadad4; }
 .landing-process__film { height: clamp(92px, 13vw, 178px); display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin-bottom: 38px; overflow: hidden; }
-.landing-process__film span { display: block; min-width: 0; background-image: url('./assets/sports-atlas.jpg'); background-size: 300% 200%; background-position: var(--tile-x) var(--tile-y); }
+.landing-process__film span { display: block; min-width: 0; background-image: url('./assets/sports-atlas.jpg'); background-size: 300% auto; background-position: var(--tile-x) 15%; }
+.landing-process__film span:nth-child(n+4) { background-position-y: 77%; }
 .landing-process.is-visible .landing-process__film span { animation: fieldwork-arrive 540ms cubic-bezier(.16, 1, .3, 1) both; animation-delay: var(--tile-delay); }
 @keyframes fieldwork-arrive { from { opacity: .4; transform: translateY(24px) scale(1.08); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .landing-process ol { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; padding: 0; border-top: 2px solid var(--mango); list-style: none; }
