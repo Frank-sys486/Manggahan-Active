@@ -73,11 +73,11 @@ export default function LandingMorph() {
       } })
         .to(progressRef.current, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
         .set(shapeRef.current, { opacity: 1 }, 0)
-        .to(dotRef.current, { attr: { cx: 75, cy: 290 }, duration: 0.4, ease: 'power2.inOut' }, 0)
-        .to(dotRef.current, { attr: { r: 65 }, duration: 0.22, ease: 'power2.inOut' }, 0.18)
-        .to(orbit, { progress: 1, duration: 0.63, ease: 'power2.inOut', onUpdate: followOrbit }, 0.4)
-        .to(dotRef.current, { attr: { r: 36 }, duration: 0.63, ease: 'sine.inOut' }, 0.4)
-        .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36 } }, 1.03)
+        .to(dotRef.current, { attr: { cx: 75, cy: 290 }, duration: 0.8, ease: 'power2.inOut' }, 0)
+        .to(dotRef.current, { attr: { r: 65 }, duration: 0.8, ease: 'sine.inOut' }, 0)
+        .to(orbit, { progress: 1, duration: 0.63, ease: 'power2.inOut', onUpdate: followOrbit }, 0.8)
+        .to(dotRef.current, { attr: { r: 36 }, duration: 0.63, ease: 'sine.inOut' }, 0.8)
+        .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36 } }, 1.43)
     }
     const animateProgress = value => {
       if (cancelled || controller.signal.aborted || value <= latestProgress) return
