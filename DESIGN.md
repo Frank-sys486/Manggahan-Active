@@ -16,7 +16,7 @@ colors:
   table-tennis-blue: "#185a7b"
   volleyball-clay: "#8a4b35"
   tennis-green: "#3b6f4d"
-  sepak-orange: "#a6632e"
+  pickleball-orange: "#a6632e"
   available-green: "#14874e"
   limited-amber: "#996200"
   booked-red: "#b8253b"
@@ -133,7 +133,7 @@ The palette combines civic deep green and warm paper with sport-specific field c
 ### Secondary
 
 - **Mango Marker:** A compact active accent for brand punctuation, active rules, labels, and scrollbar thumbs; it should not become a large background.
-- **Basketball Wood, Badminton Green, Table Tennis Blue, Volleyball Clay, Tennis Green, and Sepak Orange:** Context colors for sport surfaces and facility identity, not interchangeable decoration.
+- **Basketball Wood, Badminton Green, Table Tennis Blue, Volleyball Clay, Tennis Green, and Pickleball Orange:** Context colors for sport surfaces and facility identity, not interchangeable decoration.
 
 ### Tertiary
 
