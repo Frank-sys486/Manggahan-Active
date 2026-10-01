@@ -75,9 +75,9 @@ export default function LandingMorph() {
         .set(shapeRef.current, { opacity: 1 }, 0)
         .to(dotRef.current, { attr: { cx: 75, cy: 290 }, duration: 0.8, ease: 'power2.inOut' }, 0)
         .to(dotRef.current, { attr: { r: 65 }, duration: 0.8, ease: 'sine.inOut' }, 0)
-        .to(orbit, { progress: 1, duration: 0.63, ease: 'power2.inOut', onUpdate: followOrbit }, 0.8)
-        .to(dotRef.current, { attr: { r: 36 }, duration: 0.63, ease: 'sine.inOut' }, 0.8)
-        .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36 } }, 1.43)
+        .to(orbit, { progress: 1, duration: 0.8, ease: 'power2.inOut', onUpdate: followOrbit }, 0.8)
+        .to(dotRef.current, { attr: { r: 36 }, duration: 0.8, ease: 'sine.inOut' }, 0.8)
+        .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36 } }, 1.6)
     }
     const animateProgress = value => {
       if (cancelled || controller.signal.aborted || value <= latestProgress) return
@@ -154,7 +154,7 @@ export default function LandingMorph() {
         <svg viewBox="0 0 600 520" preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <path ref={shapeRef} d={glyphPath} fill="none" stroke="#000" strokeWidth="85" strokeLinecap="round" strokeLinejoin="round" opacity="0" />
           <circle ref={dotRef} cx="300" cy="260" r="10" fill="#000" />
-          <path ref={orbitRef} d="M75 290 C5 260 20 100 130 44 C185 5 290 -30 432 64" fill="none" stroke="none" />
+          <path ref={orbitRef} d="M75 290 C-80 250 -100 90 95 10 C290 -70 355 -40 432 64" fill="none" stroke="none" />
         </svg>
       </div>, document.body,
     )}
