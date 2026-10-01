@@ -8,6 +8,7 @@ gsap.registerPlugin(MorphSVGPlugin, ScrollTrigger)
 
 const circlePath = 'M300 250 A10 10 0 1 1 299.99 250 Z'
 const glyphPath = 'M64 380 181 132 300 340 431 132 548 380'
+const handoffScale = 0.82
 
 export function LandingGlyph({ className = '' }) {
   return <svg className={className} viewBox="0 0 600 520" fill="none" aria-hidden="true" focusable="false"><path d="M64 380 181 132 300 340 431 132 548 380" stroke="#0d3c36" strokeWidth="85" strokeLinecap="round" strokeLinejoin="round" /><circle cx="432" cy="64" r="36" fill="#f6b93b" /></svg>
@@ -15,6 +16,8 @@ export function LandingGlyph({ className = '' }) {
 
 export default function LandingMorph() {
   const rootRef = useRef(null)
+  const preloaderRef = useRef(null)
+  const progressRef = useRef(null)
   const shapeRef = useRef(null)
   const dotRef = useRef(null)
   const [progress, setProgress] = useState(0)
@@ -28,16 +31,56 @@ export default function LandingMorph() {
     let cleanup = () => {}
     let scene
     let morph
+    let handoff
+    let counterTween
     let failSafe
+    let sceneReady = false
+    let counterComplete = false
+    let introStarted = false
+    let latestProgress = 0
+    const counter = { value: 0 }
     const controller = new AbortController()
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     const unlock = () => { document.body.style.overflow = previousOverflow }
     const finish = () => {
       if (cancelled) return
+      counterTween?.kill()
       setLoading(false)
       unlock()
       ScrollTrigger.refresh()
+    }
+    const startMorph = () => {
+      if (!sceneReady || !counterComplete || introStarted || cancelled) return
+      introStarted = true
+      morph = gsap.timeline({ onComplete: () => {
+        handoff = gsap.to(preloaderRef.current, {
+          opacity: 0, duration: 0.28, ease: 'power2.out',
+          onComplete: () => {
+            setLoading(false)
+            scene.reveal(() => { if (!cancelled) { unlock(); ScrollTrigger.refresh() } })
+          },
+        })
+      } })
+        .to(progressRef.current, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
+        .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: 1.5, ease: 'power2.inOut' }, 0)
+        .to(dotRef.current, { opacity: 1, duration: 0.2, ease: 'power2.out' }, '-=0.2')
+        .to({}, { duration: 0.2 })
+    }
+    const animateProgress = value => {
+      if (cancelled || controller.signal.aborted || value <= latestProgress) return
+      latestProgress = value
+      counterTween?.kill()
+      counterTween = gsap.to(counter, {
+        value,
+        duration: Math.max(0.3, (value - counter.value) * 0.009),
+        ease: 'none',
+        onUpdate: () => setProgress(Math.floor(counter.value)),
+        onComplete: () => {
+          setProgress(value)
+          if (value === 100) { counterComplete = true; startMorph() }
+        },
+      })
     }
     failSafe = window.setTimeout(() => {
       controller.abort()
@@ -45,13 +88,12 @@ export default function LandingMorph() {
       scene = null
       cleanup = () => {}
       morph?.kill()
+      handoff?.kill()
       finish()
     }, 8000)
 
     import('./LandingTunnelScene.js')
-      .then(({ mountLandingTunnel }) => controller.signal.aborted ? null : mountLandingTunnel(root, controller.signal, value => {
-        if (!cancelled && !controller.signal.aborted) setProgress(value)
-      }))
+      .then(({ mountLandingTunnel }) => controller.signal.aborted ? null : mountLandingTunnel(root, controller.signal, animateProgress, handoffScale))
       .then(result => {
         if (!result || cancelled) {
           result?.dispose()
@@ -60,15 +102,10 @@ export default function LandingMorph() {
         }
         scene = result
         cleanup = result.dispose
+        sceneReady = true
         window.clearTimeout(failSafe)
-        setProgress(100)
-        morph = gsap.timeline({ onComplete: () => {
-          setLoading(false)
-          scene.reveal(() => { if (!cancelled) { unlock(); ScrollTrigger.refresh() } })
-        } })
-          .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: 0.65, ease: 'power2.inOut' })
-          .to(dotRef.current, { opacity: 1, duration: 0.16, ease: 'power2.out' }, '-=0.16')
-          .to({}, { duration: 0.2 })
+        animateProgress(100)
+        startMorph()
       })
       .catch(error => {
         console.warn('3D hero unavailable; showing the static M.', error)
@@ -81,6 +118,8 @@ export default function LandingMorph() {
       controller.abort()
       window.clearTimeout(failSafe)
       morph?.kill()
+      handoff?.kill()
+      counterTween?.kill()
       cleanup()
       unlock()
     }
@@ -88,8 +127,8 @@ export default function LandingMorph() {
 
   return <>
     {loading && createPortal(
-      <div className="landing-preloader" role="status" aria-label={`Loading Manggahan Active, ${progress}%`}>
-        <span className="landing-preloader__progress" aria-hidden="true">{progress}%</span>
+      <div ref={preloaderRef} className="landing-preloader" role="status" aria-label={`Loading Manggahan Active, ${progress}%`} style={{ '--handoff-scale': handoffScale }}>
+        <span ref={progressRef} className="landing-preloader__progress" aria-hidden="true">{progress}%</span>
         <svg viewBox="0 0 600 520" preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <path ref={shapeRef} d={circlePath} fill="none" stroke="#000" strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" />
           <circle ref={dotRef} cx="432" cy="64" r="36" fill="#000" opacity="0" />
