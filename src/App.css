@@ -61,7 +61,7 @@ button:active:not(:disabled) { transform: scale(.97); }
 .landing-header nav button svg { transition: transform var(--motion-standard) var(--motion-ease); }
 .landing-header nav button:hover svg { transform: translateX(4px); }
 .landing-preloader { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; background: var(--paper-bright); }
-.landing-preloader svg { display: block; width: min(100svh, 108vw); height: min(100svh, 108vw); overflow: visible; transform: scale(var(--handoff-scale)); }
+.landing-preloader svg { display: block; width: min(100svh, 108vw); height: min(100svh, 108vw); overflow: visible; transform: scale(var(--circle-scale)); }
 .landing-preloader__progress { position: absolute; top: 28px; right: clamp(20px, 3vw, 48px); color: #000; font: 800 1.2rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
 .landing-intro { background: #061b18; }
 .landing-hero { position: relative; z-index: 3; height: 100svh; background: var(--paper-bright); overflow: hidden; }
