@@ -11,6 +11,7 @@ const glyphPath = 'M64 380 181 132 300 340 431 132 548 380'
 const dotPath = 'M468 64 A36 36 0 1 1 396 64 A36 36 0 1 1 468 64 Z'
 const circleScale = 0.68
 const handoffScale = 0.92
+const morphDuration = 0.65
 
 export function LandingGlyph({ className = '' }) {
   return <svg className={className} viewBox="0 0 600 520" fill="none" aria-hidden="true" focusable="false"><path d="M64 380 181 132 300 340 431 132 548 380" stroke="#0d3c36" strokeWidth="85" strokeLinecap="round" strokeLinejoin="round" /><circle cx="432" cy="64" r="36" fill="#f6b93b" /></svg>
@@ -58,7 +59,7 @@ export default function LandingMorph() {
       introStarted = true
       morph = gsap.timeline({ onComplete: () => {
         handoff = gsap.to(preloaderRef.current, {
-          opacity: 0, duration: 0.28, ease: 'power2.out',
+          opacity: 0, duration: 0.1, ease: 'power2.out',
           onComplete: () => {
             setLoading(false)
             scene.reveal(() => { if (!cancelled) { unlock(); ScrollTrigger.refresh() } })
@@ -66,12 +67,11 @@ export default function LandingMorph() {
         })
       } })
         .to(progressRef.current, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
-        .to(svgRef.current, { scale: handoffScale, duration: 1.5, ease: 'sine.inOut' }, 0)
-        .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: 1.5, ease: 'sine.inOut' }, 0)
-        .to(dotRef.current, { morphSVG: dotPath, duration: 1.5, ease: 'sine.inOut' }, 0)
-        .set(shapeRef.current, { attr: { d: glyphPath, 'stroke-width': 85 } }, 1.5)
-        .set(dotRef.current, { attr: { d: dotPath } }, 1.5)
-        .to({}, { duration: 0.25 })
+        .to(svgRef.current, { scale: handoffScale, duration: morphDuration, ease: 'sine.inOut' }, 0)
+        .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: morphDuration, ease: 'sine.inOut' }, 0)
+        .to(dotRef.current, { morphSVG: dotPath, duration: morphDuration, ease: 'sine.inOut' }, 0)
+        .set(shapeRef.current, { attr: { d: glyphPath, 'stroke-width': 85 } }, morphDuration)
+        .set(dotRef.current, { attr: { d: dotPath } }, morphDuration)
     }
     const animateProgress = value => {
       if (cancelled || controller.signal.aborted || value <= latestProgress) return
@@ -79,7 +79,7 @@ export default function LandingMorph() {
       counterTween?.kill()
       counterTween = gsap.to(counter, {
         value,
-        duration: Math.max(0.3, (value - counter.value) * 0.009),
+        duration: Math.max(0.1, (value - counter.value) * 0.0025),
         ease: 'none',
         onUpdate: () => setProgress(Math.floor(counter.value)),
         onComplete: () => {
