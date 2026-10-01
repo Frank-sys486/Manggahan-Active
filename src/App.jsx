@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import LandingMorph, { LandingGlyph } from './LandingMorph.jsx'
 import LandingCourt from './LandingCourt.jsx'
+import { demoShortcutRole, findDemoAccount } from './login.js'
 
 const days = [
   { day: 'Mon', date: 'Sep 28', full: 'Monday, September 28, 2026' },
@@ -147,7 +148,6 @@ const demoAccounts = {
     name: 'Juan Dela Cruz',
     email: 'player@manggahan.test',
     password: 'Player123',
-    description: 'Reserve facilities and manage personal bookings.',
   },
   admin: {
     role: 'admin',
@@ -155,7 +155,6 @@ const demoAccounts = {
     name: 'Facility Admin',
     email: 'admin@manggahan.test',
     password: 'Admin123',
-    description: 'Review the daily facility and reservation board.',
   },
 }
 
@@ -171,7 +170,6 @@ function LineIcon({ name, size = 24 }) {
   if (name === 'chevron-down') return <svg {...common}><path d="m6 9 6 6 6-6" /></svg>
   if (name === 'check') return <svg {...common}><path d="m5 12 4 4L19 6" /></svg>
   if (name === 'arrow') return <svg {...common}><path d="M5 12h14M14 7l5 5-5 5" /></svg>
-  if (name === 'lock') return <svg {...common}><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" /></svg>
   if (name === 'eye') return <svg {...common}><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></svg>
   if (name === 'eye-off') return <svg {...common}><path d="m3 3 18 18M10.6 6.2A11.8 11.8 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-2.1 2.8M6.5 6.5C3.6 8.3 2 12 2 12s3.5 6 10 6a10.8 10.8 0 0 0 4-.7M10.2 10.2a2.5 2.5 0 0 0 3.6 3.6" /></svg>
   if (name === 'logout') return <svg {...common}><path d="M10 17l5-5-5-5M15 12H3M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5" /></svg>
@@ -429,7 +427,6 @@ function LandingPage({ onEnter }) {
 }
 
 function LoginPage({ onLogin, onBack }) {
-  const [role, setRole] = useState('player')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -438,19 +435,23 @@ function LoginPage({ onLogin, onBack }) {
   const passwordId = useId()
   const errorId = useId()
 
-  function fillAccount(nextRole) {
-    const account = demoAccounts[nextRole]
-    setRole(nextRole)
-    setEmail(account.email)
-    setPassword(account.password)
-    setError('')
-  }
+  useEffect(() => {
+    function handleShortcut(event) {
+      const role = demoShortcutRole(event)
+      if (!role) return
+      event.preventDefault()
+      onLogin(demoAccounts[role])
+    }
+
+    window.addEventListener('keydown', handleShortcut)
+    return () => window.removeEventListener('keydown', handleShortcut)
+  }, [onLogin])
 
   function submit(event) {
     event.preventDefault()
-    const account = demoAccounts[role]
-    if (email.trim().toLowerCase() !== account.email || password !== account.password) {
-      setError('The email or password does not match the selected role. Use the demo credentials shown on this page.')
+    const account = findDemoAccount(demoAccounts, email, password)
+    if (!account) {
+      setError('Email or password is incorrect. Check your details and try again.')
       return
     }
     onLogin(account)
@@ -464,38 +465,18 @@ function LoginPage({ onLogin, onBack }) {
           <span className="brand-mark" aria-hidden="true"><i /><i /></span>
           <div><h1 id="login-brand">Manggahan <em>Active</em></h1><p>Community sports complex</p></div>
         </div>
-        <div className="login-message"><h2>One court.<br />Two ways in.</h2><p>Players reserve time. Administrators keep every facility moving.</p></div>
-        <section className="credential-ledger" aria-labelledby="demo-credentials-heading">
-          <header><h2 id="demo-credentials-heading">Demo credentials</h2><p>Choose an account to fill the sign-in form.</p></header>
-          {Object.values(demoAccounts).map(account => (
-            <button type="button" key={account.role} onClick={() => fillAccount(account.role)}>
-              <span><strong>{account.label}</strong><small>{account.description}</small></span>
-              <span className="credential-values"><code>{account.email}</code><code>{account.password}</code></span>
-              <LineIcon name="arrow" />
-            </button>
-          ))}
-          <p className="demo-warning"><LineIcon name="lock" size={18} />Classroom demo only. These credentials are stored in the front end and must not be used for a real deployment.</p>
-        </section>
+        <div className="login-message"><h2>Your game<br />starts here.</h2><p>Find a court, pick your time, and play together.</p></div>
+        <p className="login-world__note">Classroom prototype · Demo reservations only</p>
       </section>
 
       <section className="login-panel" aria-labelledby="login-heading">
         <button className="text-button login-back" type="button" onClick={onBack}><LineIcon name="chevron-left" size={18} /> Back to home</button>
         <form className="login-form" onSubmit={submit}>
-          <div className="login-heading"><h2 id="login-heading">Sign in to your court</h2><p>Select your role, then enter its demo credentials.</p></div>
-          <fieldset className="role-selector">
-            <legend>Choose role</legend>
-            {Object.values(demoAccounts).map(account => (
-              <label key={account.role}>
-                <input type="radio" name="role" value={account.role} checked={role === account.role} onChange={() => { setRole(account.role); setError('') }} />
-                <span><LineIcon name={account.role === 'player' ? 'users' : 'building'} /><strong>{account.label}</strong><small>{account.role === 'player' ? 'Book and play' : 'Manage facilities'}</small></span>
-              </label>
-            ))}
-          </fieldset>
-          <label className="login-field" htmlFor={emailId}>Email address<input id={emailId} type="email" value={email} onChange={event => { setEmail(event.target.value); setError('') }} autoComplete="username" required /></label>
-          <label className="login-field" htmlFor={passwordId}>Password<span className="password-control"><input id={passwordId} type={showPassword ? 'text' : 'password'} value={password} onChange={event => { setPassword(event.target.value); setError('') }} autoComplete="current-password" required aria-describedby={error ? errorId : undefined} /><button className={showPassword ? 'is-visible' : ''} type="button" onClick={() => setShowPassword(current => !current)} aria-label={showPassword ? 'Hide password' : 'Show password'}><LineIcon name={showPassword ? 'eye-off' : 'eye'} /></button></span></label>
+          <div className="login-heading"><h2 id="login-heading">Sign in to your court</h2><p>Enter your email address and password to continue.</p></div>
+          <label className="login-field" htmlFor={emailId}>Email address<input id={emailId} type="email" value={email} onChange={event => { setEmail(event.target.value); setError('') }} autoComplete="username" required aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} /></label>
+          <label className="login-field" htmlFor={passwordId}>Password<span className="password-control"><input id={passwordId} type={showPassword ? 'text' : 'password'} value={password} onChange={event => { setPassword(event.target.value); setError('') }} autoComplete="current-password" required aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} /><button className={showPassword ? 'is-visible' : ''} type="button" onClick={() => setShowPassword(current => !current)} aria-label={showPassword ? 'Hide password' : 'Show password'}><LineIcon name={showPassword ? 'eye-off' : 'eye'} /></button></span></label>
           {error && <p className="login-error" id={errorId} role="alert">{error}</p>}
-          <button className="primary-button login-submit" type="submit">Sign in as {demoAccounts[role].label}<LineIcon name="arrow" /></button>
-          <button className="text-button login-fill" type="button" onClick={() => fillAccount(role)}>Fill {demoAccounts[role].label.toLowerCase()} demo credentials</button>
+          <button className="primary-button login-submit" type="submit">Sign in<LineIcon name="arrow" /></button>
         </form>
       </section>
     </main>
