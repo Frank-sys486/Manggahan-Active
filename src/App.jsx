@@ -1,7 +1,8 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import LandingMorph, { LandingGlyph } from './LandingMorph.jsx'
 import LandingCourt from './LandingCourt.jsx'
 import { demoShortcutRole, findDemoAccount } from './login.js'
+import { getSlotStatus, isBookableStatus, slotKey } from './bookingOperations.js'
 
 const days = [
   { day: 'Mon', date: 'Sep 28', full: 'Monday, September 28, 2026' },
@@ -78,11 +79,20 @@ const facilitySeed = [
   },
 ]
 
+const operationsKey = 'manggahan-operations-v1'
 const demoStaffRows = [
-  ['MA-2041', 'Basketball Court B', '4:00 PM', 'Confirmed'],
-  ['MA-2042', 'Badminton Hall', '6:00 PM', 'Pending'],
-  ['MA-2043', 'Table Tennis Hall', '8:00 PM', 'Confirmed'],
+  { id: 'MA-2041', facilityId: 'basketball', facilityName: 'Basketball Court A', date: days[0].full, time: '8:00 PM', players: '6', contactName: 'Demo guest', email: '', status: 'Confirmed', source: 'staff' },
+  { id: 'MA-2042', facilityId: 'badminton', facilityName: 'Badminton Hall', date: days[0].full, time: '5:00 PM', players: '2', contactName: 'Demo guest', email: '', status: 'Pending', source: 'staff' },
+  { id: 'MA-2043', facilityId: 'table-tennis', facilityName: 'Table Tennis Hall', date: days[0].full, time: '8:00 PM', players: '2', contactName: 'Demo guest', email: '', status: 'Confirmed', source: 'staff' },
 ]
+
+function loadOperations() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(operationsKey))
+    if (Array.isArray(saved?.reservations) && Array.isArray(saved?.blockedSlots)) return saved
+  } catch { /* The classroom demo still works when storage is unavailable. */ }
+  return { reservations: demoStaffRows, blockedSlots: [] }
+}
 
 const leaderboardData = {
   basketball: {
@@ -253,6 +263,7 @@ function CourtPreview({ facility }) {
 
 function StatusMark({ status }) {
   if (status === 'booked') return <span className="status-mark status-mark--booked" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17" /></svg></span>
+  if (status === 'closed') return <span className="status-mark status-mark--closed" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg></span>
   if (status === 'limited') return <span className="status-mark status-mark--limited" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4 21 20H3Z" /></svg></span>
   return <span className="status-mark status-mark--open" aria-hidden="true" />
 }
@@ -519,7 +530,7 @@ function DateBoard({ selectedDay, onSelectDay }) {
   )
 }
 
-function FacilityLane({ facility, selected, focused, onFocus, onSelect }) {
+function FacilityLane({ facility, selected, focused, onFocus, onSelect, date, reservations, blockedSlots }) {
   return (
     <section className={`facility-lane facility-lane--${facility.surface} ${focused ? 'is-focused' : ''}`} aria-labelledby={`${facility.id}-heading`}>
       <button className="facility-name" type="button" onClick={onFocus} aria-expanded={focused} aria-controls={`${facility.id}-details`} aria-label={`${focused ? 'Hide' : 'View'} details for ${facility.name}`}>
@@ -530,14 +541,14 @@ function FacilityLane({ facility, selected, focused, onFocus, onSelect }) {
       <div className="slot-track">
         <CourtLines />
         {times.map((time, index) => {
-          const status = facility.statuses[index]
-          const isSelected = selected?.facilityId === facility.id && selected?.time === time
+          const status = getSlotStatus(facility, date, time, times, reservations, blockedSlots)
+          const isSelected = isBookableStatus(status) && selected?.facilityId === facility.id && selected?.time === time
           return (
             <button
               key={time}
               type="button"
               className={`slot slot--${status} ${isSelected ? 'is-selected' : ''}`}
-              disabled={status === 'booked'}
+              disabled={!isBookableStatus(status)}
               onClick={event => onSelect({ facilityId: facility.id, facilityName: facility.name, facilityNote: facility.note, sport: facility.sport, time, status }, event.currentTarget.closest('.facility-lane'))}
               aria-pressed={isSelected}
               aria-label={`${facility.name}, ${time}, ${status}`}
@@ -566,15 +577,15 @@ function FacilityLane({ facility, selected, focused, onFocus, onSelect }) {
 }
 
 function StatusLegend() {
-  return <div className="legend" aria-label="Availability legend"><span><StatusMark status="open" /><b>Open</b>Available for booking</span><span><StatusMark status="limited" /><b>Limited</b>Few slots left</span><span><StatusMark status="booked" /><b>Booked</b>Not available</span><p>Let’s keep Manggahan active</p></div>
+  return <div className="legend" aria-label="Availability legend"><span><StatusMark status="open" /><b>Open</b>Available for booking</span><span><StatusMark status="limited" /><b>Limited</b>Few slots left</span><span><StatusMark status="booked" /><b>Booked</b>Reserved</span><span><StatusMark status="closed" /><b>Closed</b>Maintenance</span><p>Let’s keep Manggahan active</p></div>
 }
 
-function BookingBar({ selection, selectedDate, stage, onStage, onConfirm, account }) {
+function BookingBar({ selection, selectedDate, stage, onStage, onConfirm, account, status, error }) {
   const nameId = useId()
   const emailId = useId()
   const playersId = useId()
 
-  if (stage === 'details') {
+  if (stage === 'details' && isBookableStatus(status)) {
     return (
       <section className="booking-panel" aria-labelledby="booking-heading">
         <div className="booking-panel__intro"><button type="button" className="text-button" onClick={() => onStage('summary')}><LineIcon name="chevron-left" />Back</button><div><h2 id="booking-heading">Complete your reservation</h2><p>{selection.facilityName} · {selectedDate.full} · {selection.time}</p></div></div>
@@ -594,14 +605,17 @@ function BookingBar({ selection, selectedDate, stage, onStage, onConfirm, accoun
       <div className="booking-item booking-item--facility"><SportMark sport={selection.sport} size={50} /><span><strong>{selection.facilityName}</strong><small>{selection.facilityNote}</small></span></div>
       <div className="booking-item"><LineIcon name="clock" size={38} /><span><strong>{selection.time} – {times[times.indexOf(selection.time) + 1] || '11:00 PM'}</strong><small>{selectedDate.full}</small></span></div>
       <div className="booking-item"><LineIcon name="users" size={38} /><span><strong>6 players</strong><small>Ideal for 5–10 players</small></span></div>
-      <div className="booking-item booking-item--status"><StatusMark status={selection.status} /><span><strong>{selection.status === 'limited' ? 'Limited' : 'Available'}</strong><small>Ready for reservation</small></span></div>
-      <button className="primary-button" type="button" onClick={() => onStage('details')}>Reserve this slot<LineIcon name="arrow" /></button>
+      <div className="booking-item booking-item--status"><StatusMark status={status} /><span><strong>{status === 'limited' ? 'Limited' : isBookableStatus(status) ? 'Available' : 'Unavailable'}</strong><small>{isBookableStatus(status) ? 'Ready for reservation' : 'Choose another time'}</small></span></div>
+      <button className="primary-button" type="button" disabled={!isBookableStatus(status)} onClick={() => onStage('details')}>Reserve this slot<LineIcon name="arrow" /></button>
+      {error && <p className="booking-error" role="alert">{error}</p>}
     </aside>
   )
 }
 
-function ScheduleView({ selectedDay, onSelectDay, selection, onSelect, bookingStage, onBookingStage, onConfirm, account }) {
+function ScheduleView({ selectedDay, onSelectDay, selection, onSelect, bookingStage, onBookingStage, onConfirm, account, reservations, blockedSlots, bookingError }) {
   const [focusedFacility, setFocusedFacility] = useState(null)
+  const selectedFacility = facilitySeed.find(facility => facility.id === selection.facilityId)
+  const selectedStatus = selectedFacility ? getSlotStatus(selectedFacility, days[selectedDay].full, selection.time, times, reservations, blockedSlots) : 'booked'
 
   function revealFacility(facilityId, lane) {
     setFocusedFacility(facilityId)
@@ -625,11 +639,11 @@ function ScheduleView({ selectedDay, onSelectDay, selection, onSelect, bookingSt
       <section className={`schedule ${focusedFacility ? 'has-focus' : ''}`} aria-label={`Facility schedule for ${days[selectedDay].full}`}>
         <div className="schedule-scroll" tabIndex="0" aria-label="Scroll horizontally to see all time slots on small screens">
           <div className="time-row" aria-hidden="true"><span>Facility</span>{times.map(time => <span key={time}>{time}</span>)}</div>
-          {facilitySeed.map(facility => <FacilityLane key={facility.id} facility={facility} selected={selection} focused={focusedFacility === facility.id} onFocus={event => focusFacility(facility.id, event)} onSelect={selectSlot} />)}
+          {facilitySeed.map(facility => <FacilityLane key={facility.id} facility={facility} date={days[selectedDay].full} reservations={reservations} blockedSlots={blockedSlots} selected={selection} focused={focusedFacility === facility.id} onFocus={event => focusFacility(facility.id, event)} onSelect={selectSlot} />)}
         </div>
         <StatusLegend />
       </section>
-      <BookingBar key={`${selectedDay}-${selection.facilityId}-${selection.time}`} selection={selection} selectedDate={days[selectedDay]} stage={bookingStage} onStage={onBookingStage} onConfirm={onConfirm} account={account} />
+      <BookingBar key={`${selectedDay}-${selection.facilityId}-${selection.time}`} selection={selection} selectedDate={days[selectedDay]} stage={bookingStage} onStage={onBookingStage} onConfirm={onConfirm} account={account} status={selectedStatus} error={bookingError} />
     </>
   )
 }
@@ -638,7 +652,7 @@ function ReservationsView({ bookings, onSchedule }) {
   return (
     <section className="secondary-view" aria-labelledby="reservations-heading">
       <header><div><h1 id="reservations-heading">My reservations</h1><p>Upcoming bookings made in this prototype.</p></div><button className="primary-button" type="button" onClick={onSchedule}>Book another slot<LineIcon name="arrow" /></button></header>
-      {bookings.length === 0 ? <div className="empty-state"><SportMark sport="basketball" /><h2>No reservations yet</h2><p>Choose an open facility time and it will appear here.</p><button type="button" className="text-button" onClick={onSchedule}>Browse the schedule</button></div> : bookings.map(booking => <article className="reservation-row" key={booking.id}><div><span className="reservation-code">{booking.id}</span><h2>{booking.facilityName}</h2><p>{booking.date} · {booking.time} · {booking.players} players</p></div><span className="badge"><LineIcon name="check" size={18} />Confirmed</span></article>)}
+      {bookings.length === 0 ? <div className="empty-state"><SportMark sport="basketball" /><h2>No reservations yet</h2><p>Choose an open facility time and it will appear here.</p><button type="button" className="text-button" onClick={onSchedule}>Browse the schedule</button></div> : bookings.map(booking => <article className="reservation-row" key={booking.id}><div><span className="reservation-code">{booking.id}</span><h2>{booking.facilityName}</h2><p>{booking.date} · {booking.time} · {booking.players} players</p></div><span className={`badge badge--${booking.status.toLowerCase()}`}>{booking.status === 'Confirmed' && <LineIcon name="check" size={18} />}{booking.status}</span></article>)}
     </section>
   )
 }
@@ -670,13 +684,43 @@ function LeaderboardView() {
   )
 }
 
-function StaffView({ bookings }) {
-  const rows = useMemo(() => [...demoStaffRows, ...bookings.map(item => [item.id, item.facilityName, item.time, 'Confirmed'])], [bookings])
+function StaffView({ reservations, blockedSlots, onReservationStatus, onToggleBlock, notice }) {
+  const [dayIndex, setDayIndex] = useState(0)
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [facilityId, setFacilityId] = useState(facilitySeed[0].id)
+  const date = days[dayIndex].full
+  const dayReservations = reservations.filter(reservation => reservation.date === date)
+  const visibleReservations = dayReservations.filter(reservation => statusFilter === 'All' || reservation.status === statusFilter)
+  const facility = facilitySeed.find(item => item.id === facilityId)
+
   return (
-    <section className="secondary-view" aria-labelledby="staff-heading">
-      <header><div><h1 id="staff-heading">Today’s facility board</h1><p>Illustrative reservation data for the classroom prototype.</p></div><span className="staff-date">Sep 28, 2026</span></header>
-      <div className="staff-summary"><p><strong>{rows.length}</strong><span>Reservations</span></p><p><strong>{rows.filter(row => row[3] === 'Confirmed').length}</strong><span>Confirmed</span></p><p><strong>{rows.filter(row => row[3] === 'Pending').length}</strong><span>Needs review</span></p></div>
-      <div className="table-wrap"><table><caption>Reservation schedule</caption><thead><tr><th scope="col">Reference</th><th scope="col">Facility</th><th scope="col">Start time</th><th scope="col">Status</th></tr></thead><tbody>{rows.map(row => <tr key={row[0]}>{row.map((cell, index) => <td key={cell}>{index === 3 ? <span className={`badge badge--${cell.toLowerCase()}`}>{cell}</span> : cell}</td>)}</tr>)}</tbody></table></div>
+    <section className="secondary-view staff-view" aria-labelledby="staff-heading">
+      <header><div><h1 id="staff-heading">Facility operations</h1><p>Review reservations and manage availability for this classroom prototype.</p></div><span className="staff-date">{days[dayIndex].date}, 2026</span></header>
+      <div className="staff-summary"><p><strong>{dayReservations.filter(item => item.status !== 'Cancelled').length}</strong><span>Active reservations</span></p><p><strong>{dayReservations.filter(item => item.status === 'Confirmed').length}</strong><span>Confirmed</span></p><p><strong>{dayReservations.filter(item => item.status === 'Pending').length}</strong><span>Needs review</span></p></div>
+      {notice && <p className="staff-notice" role="status">{notice}</p>}
+      <div className="staff-toolbar">
+        <label>Day<select value={dayIndex} onChange={event => setDayIndex(Number(event.target.value))}>{days.map((day, index) => <option key={day.date} value={index}>{day.full}</option>)}</select></label>
+        <label>Status<select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>{['All', 'Confirmed', 'Pending', 'Cancelled'].map(status => <option key={status}>{status}</option>)}</select></label>
+      </div>
+      <div className="table-wrap staff-table-wrap"><table><caption>Reservations</caption><thead><tr><th scope="col">Reference</th><th scope="col">Facility</th><th scope="col">Start time</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead><tbody>
+        {visibleReservations.length === 0 && <tr><td colSpan="5">No reservations match this day and status.</td></tr>}
+        {visibleReservations.map(reservation => {
+          const bookedFacility = facilitySeed.find(item => item.id === reservation.facilityId)
+          const canRestore = bookedFacility && isBookableStatus(getSlotStatus(bookedFacility, reservation.date, reservation.time, times, reservations, blockedSlots))
+          return <tr key={reservation.id}>
+            <td><strong>{reservation.id}</strong><details className="staff-details"><summary>Details</summary><span>Contact: {reservation.contactName}</span><span>Players: {reservation.players}</span>{reservation.email && <span>Email: {reservation.email}</span>}</details></td>
+            <td>{reservation.facilityName}</td><td>{reservation.time}</td><td><span className={`badge badge--${reservation.status.toLowerCase()}`}>{reservation.status}</span></td>
+            <td><div className="staff-actions">{reservation.status === 'Pending' && <button type="button" onClick={() => onReservationStatus(reservation.id, 'Confirmed')}>Confirm</button>}{reservation.status !== 'Cancelled' && <button type="button" onClick={() => onReservationStatus(reservation.id, 'Cancelled')}>Cancel</button>}{reservation.status === 'Cancelled' && <button type="button" disabled={!canRestore} onClick={() => onReservationStatus(reservation.id, reservation.previousStatus || 'Confirmed')}>Restore</button>}</div></td>
+          </tr>
+        })}
+      </tbody></table></div>
+      <section className="staff-availability" aria-labelledby="availability-heading">
+        <header><div><h2 id="availability-heading">Facility availability</h2><p>Block open hours for maintenance. Reserved hours cannot be blocked.</p></div><label>Facility<select value={facilityId} onChange={event => setFacilityId(event.target.value)}>{facilitySeed.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></header>
+        <div className="staff-slot-grid">{times.map(time => {
+          const status = getSlotStatus(facility, date, time, times, reservations, blockedSlots)
+          return <button key={time} type="button" className={`staff-slot staff-slot--${status}`} disabled={status === 'booked'} onClick={() => onToggleBlock(date, facility.id, time)} aria-label={`${status === 'closed' ? 'Reopen' : 'Block'} ${facility.name} at ${time}`}><span>{time}</span><StatusMark status={status} /><strong>{status}</strong><small>{status === 'closed' ? 'Reopen slot' : status === 'booked' ? 'Reserved' : 'Block for maintenance'}</small></button>
+        })}</div>
+      </section>
     </section>
   )
 }
@@ -697,8 +741,14 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(0)
   const [selection, setSelection] = useState({ facilityId: 'basketball', facilityName: 'Basketball Court A', facilityNote: 'Indoor court · Full court', sport: 'basketball', time: '6:00 PM', status: 'open' })
   const [bookingStage, setBookingStage] = useState('summary')
-  const [bookings, setBookings] = useState([])
+  const [operations, setOperations] = useState(loadOperations)
+  const [bookingError, setBookingError] = useState('')
+  const [staffNotice, setStaffNotice] = useState('')
   const [announcement, setAnnouncement] = useState('')
+
+  useEffect(() => {
+    try { localStorage.setItem(operationsKey, JSON.stringify(operations)) } catch { /* Storage is optional for the demo. */ }
+  }, [operations])
 
   function login(nextAccount) {
     setAccount(nextAccount)
@@ -719,23 +769,75 @@ export default function App() {
   function selectSlot(slot) {
     setSelection(slot)
     setBookingStage('summary')
+    setBookingError('')
     setAnnouncement(`${slot.facilityName} at ${slot.time} selected.`)
+  }
+
+  function changeDay(day) {
+    setSelectedDay(day)
+    setBookingStage('summary')
+    setBookingError('')
   }
 
   function confirmBooking(event) {
     event.preventDefault()
+    const facility = facilitySeed.find(item => item.id === selection.facilityId)
+    const date = days[selectedDay].full
+    if (!facility || !isBookableStatus(getSlotStatus(facility, date, selection.time, times, operations.reservations, operations.blockedSlots))) {
+      setBookingError('This slot is no longer available. Choose another time.')
+      setBookingStage('summary')
+      return
+    }
     const data = new FormData(event.currentTarget)
     const booking = {
-      id: `MA-${2044 + bookings.length}`,
+      id: `MA-${Math.max(2043, ...operations.reservations.map(item => Number(item.id.split('-')[1]) || 0)) + 1}`,
+      facilityId: selection.facilityId,
       facilityName: selection.facilityName,
-      date: days[selectedDay].full,
+      date,
       time: selection.time,
       players: data.get('players'),
+      contactName: data.get('name'),
+      email: data.get('email'),
+      status: 'Confirmed',
+      source: 'player',
     }
-    setBookings(current => [...current, booking])
+    setOperations(current => ({ ...current, reservations: [...current.reservations, booking] }))
     setBookingStage('summary')
+    setBookingError('')
     setView('reservations')
     setAnnouncement(`Reservation ${booking.id} confirmed.`)
+  }
+
+  function changeReservationStatus(id, nextStatus) {
+    if (account?.role !== 'admin') return
+    const reservation = operations.reservations.find(item => item.id === id)
+    if (!reservation || reservation.status === nextStatus) return
+    if (nextStatus === 'Cancelled' && !window.confirm(`Cancel reservation ${id}? The slot will become available again.`)) return
+    if (reservation.status === 'Cancelled') {
+      const facility = facilitySeed.find(item => item.id === reservation.facilityId)
+      if (!facility || !isBookableStatus(getSlotStatus(facility, reservation.date, reservation.time, times, operations.reservations, operations.blockedSlots))) {
+        setStaffNotice(`Cannot restore ${id}: its slot is no longer available.`)
+        return
+      }
+    }
+    setOperations(current => ({ ...current, reservations: current.reservations.map(item => item.id === id ? { ...item, status: nextStatus, previousStatus: nextStatus === 'Cancelled' ? item.status : undefined } : item) }))
+    const message = `Reservation ${id} ${nextStatus.toLowerCase()}.`
+    setStaffNotice(message)
+    setAnnouncement(message)
+  }
+
+  function toggleSlotBlock(date, facilityId, time) {
+    if (account?.role !== 'admin') return
+    const facility = facilitySeed.find(item => item.id === facilityId)
+    if (!facility) return
+    const status = getSlotStatus(facility, date, time, times, operations.reservations, operations.blockedSlots)
+    if (status === 'booked') return
+    const key = slotKey(date, facilityId, time)
+    const reopening = status === 'closed'
+    setOperations(current => ({ ...current, blockedSlots: reopening ? current.blockedSlots.filter(item => item !== key) : [...current.blockedSlots, key] }))
+    const message = `${facility.name} at ${time} ${reopening ? 'reopened' : 'blocked for maintenance'}.`
+    setStaffNotice(message)
+    setAnnouncement(message)
   }
 
   if (!account) return entry === 'login'
@@ -746,10 +848,10 @@ export default function App() {
     <div className="app-shell">
       <Topbar view={view} onView={setView} account={account} onLogout={logout} />
       <main id="main-content" tabIndex="-1">
-        {view === 'schedule' && <ScheduleView selectedDay={selectedDay} onSelectDay={setSelectedDay} selection={selection} onSelect={selectSlot} bookingStage={bookingStage} onBookingStage={setBookingStage} onConfirm={confirmBooking} account={account} />}
-        {view === 'reservations' && <ReservationsView bookings={bookings} onSchedule={() => setView('schedule')} />}
+        {view === 'schedule' && <ScheduleView selectedDay={selectedDay} onSelectDay={changeDay} selection={selection} onSelect={selectSlot} bookingStage={bookingStage} onBookingStage={setBookingStage} onConfirm={confirmBooking} account={account} reservations={operations.reservations} blockedSlots={operations.blockedSlots} bookingError={bookingError} />}
+        {view === 'reservations' && <ReservationsView bookings={operations.reservations.filter(item => item.source === 'player')} onSchedule={() => setView('schedule')} />}
         {view === 'leaderboards' && <LeaderboardView />}
-        {view === 'staff' && <StaffView bookings={bookings} />}
+        {view === 'staff' && <StaffView reservations={operations.reservations} blockedSlots={operations.blockedSlots} onReservationStatus={changeReservationStatus} onToggleBlock={toggleSlotBlock} notice={staffNotice} />}
       </main>
       <div className="sr-only" aria-live="polite">{announcement}</div>
     </div>
