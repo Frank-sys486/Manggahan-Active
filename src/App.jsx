@@ -66,13 +66,13 @@ const facilitySeed = [
     statuses: ['open', 'limited', 'open', 'booked', 'open', 'open', 'limited'],
   },
   {
-    id: 'sepak-takraw',
-    name: 'Sepak Takraw Court',
-    note: 'Covered court · Regulation net',
-    tagline: 'Sipa higher together',
-    surface: 'sepak',
-    sport: 'sepak-takraw',
-    features: ['Regulation court', 'Competition net', 'Covered playing area', 'Team benches'],
+    id: 'pickleball',
+    name: 'Pickleball Court',
+    note: 'Covered court · One court',
+    tagline: 'Small court, big rallies',
+    surface: 'pickleball',
+    sport: 'pickleball',
+    features: ['Dedicated pickleball court', 'Low competition net', 'Non-slip surface', 'Player benches'],
     statuses: ['limited', 'open', 'booked', 'open', 'open', 'limited', 'open'],
   },
 ]
@@ -129,13 +129,13 @@ const leaderboardData = {
       ['Nina Bautista', 7, 3, 4, 9],
     ],
   },
-  'sepak-takraw': {
-    label: 'Sepak Takraw', entryLabel: 'Team', season: 'Community League · 2026',
+  pickleball: {
+    label: 'Pickleball', entryLabel: 'Pair', season: 'Doubles Ladder · 2026',
     rows: [
-      ['Manggahan Siklab', 8, 7, 1, 21],
-      ['Sipa Norte', 8, 5, 3, 15],
-      ['Eastside Regu', 8, 4, 4, 12],
-      ['Net Flyers', 8, 3, 5, 9],
+      ['Mara & Jo', 8, 7, 1, 21],
+      ['Alex & Dani', 8, 5, 3, 15],
+      ['Bea & Nico', 8, 4, 4, 12],
+      ['Sam & Kai', 8, 3, 5, 9],
     ],
   },
 }
@@ -215,10 +215,14 @@ function SportMark({ sport, size = 56 }) {
       <circle cx="51" cy="49" r="5" />
     </svg>
   )
-  if (sport === 'sepak-takraw') return (
+  if (sport === 'pickleball') return (
     <svg {...common}>
-      <circle cx="32" cy="32" r="25" />
-      <path d="M20 10c-9 18 0 35 23 44M26 8c-8 19 1 33 23 42M57 31C45 15 26 14 7 29M56 38C44 21 27 21 8 35M20 54c20-2 31-18 27-42M14 49c21-2 30-16 27-40" />
+      <g transform="rotate(-35 32 32)">
+        <ellipse cx="32" cy="23" rx="16" ry="18" />
+        <path d="M28 41v16h8V41" />
+        <g fill="currentColor" stroke="none"><circle cx="27" cy="17" r="1.7" /><circle cx="37" cy="17" r="1.7" /><circle cx="27" cy="27" r="1.7" /><circle cx="37" cy="27" r="1.7" /><circle cx="32" cy="33" r="1.7" /></g>
+      </g>
+      <circle cx="52" cy="49" r="5" />
     </svg>
   )
   return null
@@ -229,7 +233,7 @@ function CourtLines() {
 }
 
 function CourtPreview({ facility }) {
-  const surface = { basketball: '#c9ad7f', badminton: '#1c5851', 'table-tennis': '#185a7b', volleyball: '#8a4b35', tennis: '#3b6f4d', 'sepak-takraw': '#a6632e' }[facility.sport]
+  const surface = { basketball: '#c9ad7f', badminton: '#1c5851', 'table-tennis': '#185a7b', volleyball: '#8a4b35', tennis: '#3b6f4d', pickleball: '#a6632e' }[facility.sport]
   return (
     <svg className="court-preview" viewBox="0 0 900 360" role="img" aria-labelledby={`${facility.id}-preview-title`}>
       <title id={`${facility.id}-preview-title`}>Illustrated view of {facility.name}</title>
@@ -243,7 +247,7 @@ function CourtPreview({ facility }) {
       {facility.sport === 'table-tennis' && <><path d="M260 154h380l62 142H198Z" fill="#2367d1" stroke="#fffdf8" strokeWidth="6" /><path d="M450 154v142M198 226h504" fill="none" stroke="#fffdf8" strokeWidth="5" /><path d="M435 138v132M465 138v132M435 166h30M435 198h30M435 230h30" fill="none" stroke="#092f35" strokeWidth="6" /></>}
       {facility.sport === 'volleyball' && <><path d="M245 88 190 360M655 88l55 272M74 235h752" fill="none" stroke="#fffdf8" strokeWidth="5" /><path d="M430 104v212M470 104v212M430 130h40M430 165h40M430 200h40M430 235h40M430 270h40" fill="none" stroke="#092f35" strokeWidth="6" /></>}
       {facility.sport === 'tennis' && <><path d="M230 88 160 360M670 88l70 272M74 225h752M315 88 280 360M585 88l35 272" fill="none" stroke="#fffdf8" strokeWidth="5" /><path d="M435 104v212M465 104v212M435 145h30M435 190h30M435 235h30M435 280h30" fill="none" stroke="#092f35" strokeWidth="6" /></>}
-      {facility.sport === 'sepak-takraw' && <><path d="M245 88 190 360M655 88l55 272M74 235h752" fill="none" stroke="#fffdf8" strokeWidth="5" /><ellipse cx="290" cy="235" rx="55" ry="36" fill="none" stroke="#fffdf8" strokeWidth="5" /><ellipse cx="610" cy="235" rx="55" ry="36" fill="none" stroke="#fffdf8" strokeWidth="5" /><path d="M435 104v212M465 104v212M435 145h30M435 190h30M435 235h30M435 280h30" fill="none" stroke="#092f35" strokeWidth="6" /></>}
+      {facility.sport === 'pickleball' && <><path d="M245 88 190 360M655 88l55 272M225 158h450M195 300h510M450 88v70M450 300v60" fill="none" stroke="#fffdf8" strokeWidth="5" /><path d="M435 104v212M465 104v212M435 145h30M435 190h30M435 235h30M435 280h30" fill="none" stroke="#092f35" strokeWidth="6" /></>}
       <path d="M0 330 450 260 900 330" fill="none" stroke="#092f35" strokeWidth="12" opacity=".18" />
     </svg>
   )
