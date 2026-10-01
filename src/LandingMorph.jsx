@@ -8,7 +8,7 @@ gsap.registerPlugin(MorphSVGPlugin, ScrollTrigger)
 
 const circlePath = 'M300 250 A10 10 0 1 1 299.99 250 Z'
 const glyphPath = 'M64 380 181 132 300 340 431 132 548 380'
-const handoffScale = 0.82
+const handoffScale = 0.92
 
 export function LandingGlyph({ className = '' }) {
   return <svg className={className} viewBox="0 0 600 520" fill="none" aria-hidden="true" focusable="false"><path d="M64 380 181 132 300 340 431 132 548 380" stroke="#0d3c36" strokeWidth="85" strokeLinecap="round" strokeLinejoin="round" /><circle cx="432" cy="64" r="36" fill="#f6b93b" /></svg>
@@ -63,9 +63,10 @@ export default function LandingMorph() {
         })
       } })
         .to(progressRef.current, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
-        .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: 1.5, ease: 'power2.inOut' }, 0)
-        .to(dotRef.current, { opacity: 1, duration: 0.2, ease: 'power2.out' }, '-=0.2')
-        .to({}, { duration: 0.2 })
+        .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: 1.5, ease: 'power4.out' }, 0)
+        .to(dotRef.current, { opacity: 1, duration: 0.3, ease: 'power2.out' }, 0.55)
+        .set(shapeRef.current, { attr: { d: glyphPath, 'stroke-width': 85 } }, 1.5)
+        .to({}, { duration: 0.25 })
     }
     const animateProgress = value => {
       if (cancelled || controller.signal.aborted || value <= latestProgress) return
