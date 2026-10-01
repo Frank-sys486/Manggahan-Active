@@ -32,9 +32,11 @@ export default function LandingMorph() {
     let morph
     let handoff
     let counterTween
+    let circleTween
     let failSafe
     let sceneReady = false
     let counterComplete = false
+    let circleComplete = false
     let introStarted = false
     let latestProgress = 0
     const counter = { value: 0 }
@@ -45,12 +47,13 @@ export default function LandingMorph() {
     const finish = () => {
       if (cancelled) return
       counterTween?.kill()
+      circleTween?.kill()
       setLoading(false)
       unlock()
       ScrollTrigger.refresh()
     }
     const startMorph = () => {
-      if (!sceneReady || !counterComplete || introStarted || cancelled) return
+      if (!sceneReady || !counterComplete || !circleComplete || introStarted || cancelled) return
       introStarted = true
       const orbit = { progress: 0 }
       const orbitLength = orbitRef.current.getTotalLength()
@@ -80,14 +83,20 @@ export default function LandingMorph() {
       if (cancelled || controller.signal.aborted || value <= latestProgress) return
       latestProgress = value
       counterTween?.kill()
+      circleTween?.kill()
+      circleTween = gsap.to(dotRef.current, {
+        attr: { r: 10 + value * 3.2 },
+        duration: value === 100 ? 0.8 : 0.45,
+        ease: 'sine.inOut',
+        onComplete: () => {
+          if (value === 100) { circleComplete = true; startMorph() }
+        },
+      })
       counterTween = gsap.to(counter, {
         value,
         duration: Math.max(0.18, (value - counter.value) * 0.0055),
         ease: 'sine.inOut',
-        onUpdate: () => {
-          setProgress(Math.floor(counter.value))
-          dotRef.current?.setAttribute('r', 10 + counter.value * 3.2)
-        },
+        onUpdate: () => setProgress(Math.floor(counter.value)),
         onComplete: () => {
           setProgress(value)
           if (value === 100) { counterComplete = true; startMorph() }
@@ -132,6 +141,7 @@ export default function LandingMorph() {
       morph?.kill()
       handoff?.kill()
       counterTween?.kill()
+      circleTween?.kill()
       cleanup()
       unlock()
     }
