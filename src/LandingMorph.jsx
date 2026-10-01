@@ -32,13 +32,11 @@ export default function LandingMorph() {
     let morph
     let handoff
     let counterTween
-    let circleTween
     let failSafe
     let sceneReady = false
     let counterComplete = false
     let circleComplete = false
     let introStarted = false
-    let latestProgress = 0
     const counter = { value: 0 }
     const controller = new AbortController()
     const previousOverflow = document.body.style.overflow
@@ -47,7 +45,6 @@ export default function LandingMorph() {
     const finish = () => {
       if (cancelled) return
       counterTween?.kill()
-      circleTween?.kill()
       setLoading(false)
       unlock()
       ScrollTrigger.refresh()
@@ -93,41 +90,24 @@ export default function LandingMorph() {
         .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36, opacity: 1 } }, 1.6)
         .set(backDotRef.current, { attr: { opacity: 0 } }, 1.6)
     }
-    const animateProgress = value => {
-      if (cancelled || controller.signal.aborted || value <= latestProgress) return
-      latestProgress = value
-      const target = value * 0.2
-      counterTween?.kill()
-      circleTween?.kill()
-      circleTween = gsap.to(dotRef.current, {
-        attr: { r: 10 + target * 3.2 },
-        duration: 0.35,
-        ease: 'sine.inOut',
-      })
-      counterTween = gsap.to(counter, {
-        value: target,
-        duration: 0.35,
-        ease: 'sine.inOut',
-        onUpdate: () => setProgress(Math.floor(counter.value)),
-      })
-    }
     const simulateLoading = () => {
-      counterTween?.kill()
-      circleTween?.kill()
-      const stops = [20, 34 + Math.round(Math.random() * 12), 58 + Math.round(Math.random() * 12), 78 + Math.round(Math.random() * 10), 100]
+      const stops = [34 + Math.round(Math.random() * 12), 58 + Math.round(Math.random() * 12), 78 + Math.round(Math.random() * 10), 100]
       counterTween = gsap.timeline({ onComplete: () => {
         setProgress(100)
         counterComplete = true
         circleComplete = true
         startMorph()
       } })
+        .to(counter, { value: 20, duration: 0.4, ease: 'sine.inOut', onUpdate: () => setProgress(Math.floor(counter.value)) }, 1)
+        .to(dotRef.current, { attr: { r: 74 }, duration: 0.4, ease: 'sine.inOut' }, 1)
+      let at = 2.4 + Math.random()
       for (let index = 0; index < stops.length; index++) {
         const target = stops[index]
-        const previous = index === 0 ? counter.value : stops[index - 1]
+        const previous = index === 0 ? 20 : stops[index - 1]
         const duration = Math.max(0.2, (target - previous) * 0.013)
-        const pause = index > 1 ? 0.1 + Math.random() * 0.16 : 0
-        counterTween.to(counter, { value: target, duration, ease: 'sine.inOut', onUpdate: () => setProgress(Math.floor(counter.value)) }, `+=${pause}`)
-          .to(dotRef.current, { attr: { r: 10 + target * 3.2 }, duration, ease: 'sine.inOut' }, '<')
+        counterTween.to(counter, { value: target, duration, ease: 'sine.inOut', onUpdate: () => setProgress(Math.floor(counter.value)) }, at)
+          .to(dotRef.current, { attr: { r: 10 + target * 3.2 }, duration, ease: 'sine.inOut' }, at)
+        at += duration + 0.1 + Math.random() * 0.16
       }
     }
     failSafe = window.setTimeout(() => {
@@ -140,25 +120,30 @@ export default function LandingMorph() {
       finish()
     }, 8000)
 
-    import('./LandingTunnelScene.js')
-      .then(({ mountLandingTunnel }) => controller.signal.aborted ? null : mountLandingTunnel(root, controller.signal, animateProgress, handoffScale))
-      .then(result => {
-        if (!result || cancelled) {
-          result?.dispose()
-          if (!cancelled) { window.clearTimeout(failSafe); finish() }
-          return
-        }
-        scene = result
-        cleanup = result.dispose
-        sceneReady = true
-        window.clearTimeout(failSafe)
-        simulateLoading()
-      })
-      .catch(error => {
-        console.warn('3D hero unavailable; showing the static M.', error)
-        window.clearTimeout(failSafe)
-        finish()
-      })
+    const loadScene = () => {
+      import('./LandingTunnelScene.js')
+        .then(({ mountLandingTunnel }) => controller.signal.aborted ? null : mountLandingTunnel(root, controller.signal, undefined, handoffScale))
+        .then(result => {
+          if (!result || cancelled) {
+            result?.dispose()
+            if (!cancelled) { window.clearTimeout(failSafe); finish() }
+            return
+          }
+          scene = result
+          cleanup = result.dispose
+          sceneReady = true
+          window.clearTimeout(failSafe)
+          simulateLoading()
+        })
+        .catch(error => {
+          console.warn('3D hero unavailable; showing the static M.', error)
+          window.clearTimeout(failSafe)
+          finish()
+        })
+    }
+    counterTween = gsap.timeline({ onComplete: loadScene })
+      .to(counter, { value: 10, duration: 0.45, ease: 'sine.inOut', onUpdate: () => setProgress(Math.floor(counter.value)) }, 0)
+      .to(dotRef.current, { attr: { r: 42 }, duration: 0.45, ease: 'sine.inOut' }, 0)
 
     return () => {
       cancelled = true
@@ -167,7 +152,6 @@ export default function LandingMorph() {
       morph?.kill()
       handoff?.kill()
       counterTween?.kill()
-      circleTween?.kill()
       cleanup()
       unlock()
     }
