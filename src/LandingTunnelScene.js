@@ -26,6 +26,7 @@ const fragmentShader = `
   uniform sampler2D uMaskTexture;
   uniform sampler2D uTrailTexture;
   uniform float uHasTexture;
+  uniform float uRevealProgress;
   uniform float uProgress;
   uniform float uOpacity;
   uniform float uHover;
@@ -65,17 +66,18 @@ const fragmentShader = `
     vec2 edge = vec2(3.0 / (baseScale * zoom * uResolution.y));
     float neighbors = (shapeAt(uv + vec2(edge.x, 0.0)) + shapeAt(uv - vec2(edge.x, 0.0))
       + shapeAt(uv + vec2(0.0, edge.y)) + shapeAt(uv - vec2(0.0, edge.y))) * 0.25;
-    float edgeLight = max(0.0, inside - neighbors) * 0.22;
+    float innerRim = smoothstep(0.01, 0.22, max(inside - neighbors, 0.0)) * uRevealProgress;
     float hoverFade = 1.0 - smoothstep(0.18, 0.45, uProgress);
     float trail = texture2D(uTrailTexture, vUv).a * hoverFade;
     vec2 pointerUv = anchor + (uPointer - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
     float pointerInside = smoothstep(0.05, 0.25, shapeAt(pointerUv));
     float pointerDistance = length((vUv - uPointer) * uResolution);
     float hover = (1.0 - smoothstep(0.0, 58.0, pointerDistance)) * uHover * pointerInside * hoverFade;
-    float activity = max(hover, trail * 0.75);
+    float activity = max(hover, trail * 0.75) * uRevealProgress;
     if (activity < 0.005) {
-      float alpha = clamp(1.0 - inside + edgeLight, 0.0, 1.0) * uOpacity;
-      gl_FragColor = vec4(vec3(1.0), alpha);
+      float alpha = clamp(1.0 - inside * uRevealProgress + innerRim * 0.28, 0.0, 1.0) * uOpacity;
+      vec3 color = mix(vec3(1.0, 0.992, 0.973), vec3(0.025), inside * (1.0 - uRevealProgress) + innerRim);
+      gl_FragColor = vec4(color, alpha);
       return;
     }
     vec2 pixel = gl_FragCoord.xy;
@@ -93,15 +95,43 @@ const fragmentShader = `
     float outsideEdge = smoothstep(0.02, 0.27, max(neighbors - inside, 0.0));
     float whiteErosion = clamp(inside * particles * 0.65, 0.0, 0.85);
     float outsideDust = outsideEdge * particles * 0.55;
-    float alpha = clamp(1.0 - inside + edgeLight + whiteErosion, 0.0, 1.0) * uOpacity;
+    float alpha = clamp(1.0 - inside * uRevealProgress + innerRim * 0.28 + whiteErosion, 0.0, 1.0) * uOpacity;
     float ink = outsideDust;
-    gl_FragColor = vec4(mix(vec3(1.0), vec3(0.035), ink), alpha);
+    vec3 color = mix(vec3(1.0, 0.992, 0.973), vec3(0.035), ink + inside * (1.0 - uRevealProgress) + innerRim);
+    gl_FragColor = vec4(color, alpha);
   }
 `
 
-function loadTexture(url) {
+const photoFragmentShader = `
+  uniform sampler2D uAtlas;
+  uniform vec4 uTileBounds;
+  uniform vec3 uFallbackColor;
+  uniform float uHasAtlas;
+  uniform float uTime;
+  uniform float uScrollVelocity;
+  varying vec2 vUv;
+
+  void main() {
+    vec2 localUv = (vUv - uTileBounds.xy) / (uTileBounds.zw - uTileBounds.xy);
+    float wave = sin(localUv.y * 16.0 + uTime * 3.0) * 0.7
+      + sin(localUv.y * 29.0 - uTime * 2.2) * 0.3;
+    vec2 displaced = vUv + vec2(wave * 0.014 * uScrollVelocity, 0.0);
+    vec2 safeUv = clamp(displaced, uTileBounds.xy, uTileBounds.zw);
+    float edge = 1.0 - smoothstep(0.0, 0.16, min(localUv.x, 1.0 - localUv.x));
+    vec2 split = vec2(0.0035 * edge * uScrollVelocity, 0.0);
+    vec3 image = texture2D(uAtlas, safeUv).rgb;
+    if (uScrollVelocity > 0.001 && edge > 0.001) {
+      image.r = texture2D(uAtlas, clamp(safeUv + split, uTileBounds.xy, uTileBounds.zw)).r;
+      image.b = texture2D(uAtlas, clamp(safeUv - split, uTileBounds.xy, uTileBounds.zw)).b;
+    }
+    gl_FragColor = vec4(mix(uFallbackColor, image, uHasAtlas), 1.0);
+    #include <colorspace_fragment>
+  }
+`
+
+function loadTexture(url, manager) {
   return new Promise(resolve => {
-    new THREE.TextureLoader().load(url, resolve, undefined, () => resolve(null))
+    new THREE.TextureLoader(manager).load(url, resolve, undefined, () => resolve(null))
   })
 }
 
@@ -169,6 +199,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
       uMaskTexture: { value: maskTexture || placeholder },
       uTrailTexture: { value: trailTexture },
       uHasTexture: { value: maskTexture ? 1 : 0 },
+      uRevealProgress: { value: 0 },
       uProgress: { value: 0 },
       uOpacity: { value: 1 },
       uHover: { value: 0 },
@@ -194,13 +225,28 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     [9, -5, -111], [-6, 6, -129], [8, -4, -146], [-9, 3, -164], [7, -6, -180],
   ]
   const panels = []
+  const timeUniform = { value: 0 }
+  const velocityUniform = { value: 0 }
   const compact = window.innerWidth < 760
   const fallbackColors = [0x8f643c, 0x1c5851, 0x185a7b, 0x8a4b35, 0x3b6f4d, 0xa6632e]
   for (let i = 0; i < (compact ? 8 : 10); i++) {
     const geometry = photoGeometry(i)
-    const material = new THREE.MeshBasicMaterial({
-      map: atlasTexture,
-      color: atlasTexture ? 0xffffff : fallbackColors[i % 6],
+    const column = i % 3
+    const row = Math.floor(i / 3) % 2
+    const inset = 0.001
+    const tileMinX = column / 3 + inset
+    const tileMinY = (1 - row) / 2 + inset
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uAtlas: { value: atlasTexture || placeholder },
+        uTileBounds: { value: new THREE.Vector4(tileMinX, tileMinY, (column + 1) / 3 - inset, (2 - row) / 2 - inset) },
+        uFallbackColor: { value: new THREE.Color(fallbackColors[i % 6]) },
+        uHasAtlas: { value: atlasTexture ? 1 : 0 },
+        uTime: timeUniform,
+        uScrollVelocity: velocityUniform,
+      },
+      vertexShader,
+      fragmentShader: photoFragmentShader,
       side: THREE.DoubleSide,
       toneMapped: false,
     })
@@ -239,6 +285,8 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   let active = true
   let elapsed = 0
   let lastRenderTime = null
+  let lenis
+  let revealTween
   const paintTrail = delta => {
     if (!trailContext || trailPointer.life === 0 || delta === 0) return
     trailPointer.life = Math.max(0, trailPointer.life - delta)
@@ -261,6 +309,9 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     camera.position.y += (pointer.y - camera.position.y) * 0.08
     camera.lookAt(0, 0, camera.position.z - 100)
     artifact.rotation.set(time * 0.07, time * 0.11, time * 0.035)
+    timeUniform.value = time
+    const targetVelocity = lenis?.isScrolling ? Math.min(1, Math.abs(lenis.velocity) / 65) : 0
+    velocityUniform.value += (targetVelocity - velocityUniform.value) * (1 - Math.exp(-delta * 9))
     maskMaterial.uniforms.uProgress.value = state.progress
     maskMaterial.uniforms.uOpacity.value = 1 - smoothstep(0.65, 0.8, state.progress)
     scene.background.copy(tunnelBackground).lerp(orbitBackground, smoothstep(0.8, 0.92, state.progress))
@@ -331,7 +382,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   const leave = () => { pointer.x = 0; pointer.y = 0; trailPointer.active = false }
 
   resize()
-  const lenis = new Lenis({ anchors: true })
+  lenis = new Lenis({ anchors: true })
   lenis.on('scroll', ScrollTrigger.update)
   gsap.ticker.lagSmoothing(0)
   const tick = time => {
@@ -375,7 +426,8 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   ScrollTrigger.refresh()
   root.classList.add('landing-morph--ready')
 
-  return () => {
+  const dispose = () => {
+    revealTween?.kill()
     if (hero.parentElement?.classList.contains('pin-spacer')) {
       hero.parentElement.style.removeProperty('pointer-events')
     }
@@ -404,6 +456,15 @@ function makeTunnel(root, maskTexture, atlasTexture) {
     renderer.dispose()
     renderer.domElement.remove()
   }
+  return {
+    reveal(onComplete) {
+      revealTween?.kill()
+      revealTween = gsap.to(maskMaterial.uniforms.uRevealProgress, {
+        value: 1, duration: 0.65, ease: 'power2.inOut', onComplete,
+      })
+    },
+    dispose,
+  }
   } catch (error) {
     root.classList.remove('landing-morph--ready')
     renderer.dispose()
@@ -412,12 +473,18 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   }
 }
 
-export async function mountLandingTunnel(root, signal) {
-  const [maskTexture, atlasTexture] = await Promise.all([loadTexture(maskUrl), loadTexture(atlasUrl)])
+export async function mountLandingTunnel(root, signal, onProgress = () => {}) {
+  const manager = new THREE.LoadingManager()
+  manager.onProgress = (_url, loaded, total) => onProgress(Math.round(loaded / total * 100))
+  const [maskTexture, atlasTexture] = await Promise.all([loadTexture(maskUrl, manager), loadTexture(atlasUrl, manager)])
+  if (!maskTexture) {
+    atlasTexture?.dispose()
+    throw new Error('Hero mask texture could not be loaded')
+  }
   if (signal.aborted || !root.isConnected) {
     maskTexture?.dispose()
     atlasTexture?.dispose()
-    return () => {}
+    return null
   }
   try { return makeTunnel(root, maskTexture, atlasTexture) }
   catch (error) {
