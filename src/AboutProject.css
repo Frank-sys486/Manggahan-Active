@@ -1,109 +1,86 @@
 .about-project {
-  min-height: 100svh;
   width: 100%;
+  height: 100svh;
   overflow-x: hidden;
-  color: #f5f2e9;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  overscroll-behavior-y: contain;
   background: #000;
 }
 
-.about-project__inner {
-  width: min(100%, 1440px);
+.about-project::-webkit-scrollbar { display: none; }
+
+.about-project__slide {
+  width: 100%;
+  height: 100svh;
   min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  margin-inline: auto;
-  padding: clamp(24px, 4vw, 64px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
-.about-project__identity {
-  flex: 0 0 auto;
-  min-height: min(39svh, 340px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(20px, 4vw, 72px);
+.about-project__slide--identity {
+  background: #061b18 url('/aboutproject-courts.jpg') center / cover no-repeat;
+}
+
+.about-project__hero-mark {
+  width: min(57vw, 76svh, 650px);
 }
 
 .about-project__mark {
-  width: clamp(140px, 24svh, 260px);
+  display: block;
+  width: 100%;
   height: auto;
-  flex: 0 0 auto;
 }
 
 .about-project__mark path { stroke: #f5f2e9; }
 
-.about-project__identity h1 {
-  margin: 0;
-  font: 800 clamp(3.8rem, 8vw, 6rem)/.83 var(--font-display);
-  letter-spacing: -.025em;
-  text-transform: uppercase;
-}
-
-.about-project__identity h1 span { display: block; color: #f6b93b; }
-
-.about-project__stack {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.about-project__stack h2 {
-  margin: 0 0 clamp(16px, 3svh, 36px);
-  color: #f6b93b;
-  font: 800 clamp(1.8rem, 3vw, 2.8rem)/1 var(--font-display);
-  letter-spacing: -.025em;
-  text-transform: uppercase;
+.about-project__slide--stack {
+  background: #000;
 }
 
 .about-project__grid {
-  flex: 1;
+  width: min(100%, 1240px);
+  height: min(100%, 860px);
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: clamp(14px, 2vw, 28px);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 3vw, 48px);
   margin: 0;
-  padding: 0;
+  padding: clamp(28px, 5vw, 72px);
   list-style: none;
 }
 
 .about-project__grid li {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
+  display: grid;
+  place-items: center;
 }
 
 .about-project__grid svg {
-  width: clamp(42px, 6svh, 70px);
-  height: clamp(42px, 6svh, 70px);
-  flex: 0 0 auto;
+  width: clamp(82px, 10vw, 142px);
+  height: clamp(82px, 10vw, 142px);
 }
 
-.about-project__grid span {
-  max-width: 16ch;
-  font: 700 clamp(.85rem, 1.4vw, 1.15rem)/1.12 var(--font-display);
-  text-transform: uppercase;
-  text-wrap: balance;
-  overflow-wrap: anywhere;
+@media (max-width: 680px) {
+  .about-project__slide--identity { background-position: 20% center; }
+  .about-project__hero-mark { width: min(83vw, 62svh); }
+  .about-project__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    padding: 16px;
+  }
+  .about-project__grid svg {
+    width: clamp(64px, 20vw, 92px);
+    height: clamp(64px, 20vw, 92px);
+  }
 }
 
-@media (max-width: 900px) {
-  .about-project__identity { min-height: 31svh; }
-  .about-project__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); }
-}
-
-@media (max-width: 600px) {
-  .about-project__inner { min-height: max(100svh, 530px); padding: 18px; }
-  .about-project__identity { min-height: 128px; justify-content: flex-start; gap: 12px; }
-  .about-project__mark { width: clamp(88px, 24vw, 116px); }
-  .about-project__identity h1 { font-size: clamp(2.45rem, 10vw, 4rem); }
-  .about-project__stack h2 { margin-bottom: 10px; font-size: 1.65rem; }
-  .about-project__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 8px; }
-  .about-project__grid li { gap: 5px; }
-  .about-project__grid svg { width: clamp(30px, 6svh, 40px); height: clamp(30px, 6svh, 40px); }
-  .about-project__grid span { font-size: clamp(.75rem, 3vw, .92rem); }
+@media (prefers-reduced-motion: reduce) {
+  .about-project { scroll-behavior: auto; }
 }
