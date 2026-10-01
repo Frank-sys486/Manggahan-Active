@@ -26,6 +26,7 @@ const fragmentShader = `
   uniform sampler2D uMaskTexture;
   uniform sampler2D uTrailTexture;
   uniform float uHasTexture;
+  uniform float uEntranceScale;
   uniform float uRevealProgress;
   uniform float uProgress;
   uniform float uOpacity;
@@ -61,22 +62,22 @@ const fragmentShader = `
     float aspect = uResolution.x / uResolution.y;
     float baseScale = min(1.001, aspect * 1.08);
     vec2 anchor = mix(vec2(0.5), vec2(0.5, 1.0 - 340.0 / 520.0), smoothstep(0.0, 0.68, uProgress));
-    vec2 uv = anchor + (vUv - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
+    vec2 uv = anchor + (vUv - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom * uEntranceScale);
     float inside = shapeAt(uv);
-    vec2 edge = vec2(3.0 / (baseScale * zoom * uResolution.y));
+    vec2 edge = vec2(3.0 / (baseScale * zoom * uEntranceScale * uResolution.y));
     float neighbors = (shapeAt(uv + vec2(edge.x, 0.0)) + shapeAt(uv - vec2(edge.x, 0.0))
       + shapeAt(uv + vec2(0.0, edge.y)) + shapeAt(uv - vec2(0.0, edge.y))) * 0.25;
     float innerRim = smoothstep(0.01, 0.22, max(inside - neighbors, 0.0)) * uRevealProgress;
     float hoverFade = 1.0 - smoothstep(0.18, 0.45, uProgress);
     float trail = texture2D(uTrailTexture, vUv).a * hoverFade;
-    vec2 pointerUv = anchor + (uPointer - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom);
+    vec2 pointerUv = anchor + (uPointer - 0.5) * vec2(aspect, 1.0) / (baseScale * zoom * uEntranceScale);
     float pointerInside = smoothstep(0.05, 0.25, shapeAt(pointerUv));
     float pointerDistance = length((vUv - uPointer) * uResolution);
     float hover = (1.0 - smoothstep(0.0, 58.0, pointerDistance)) * uHover * pointerInside * hoverFade;
     float activity = max(hover, trail * 0.75) * uRevealProgress;
     if (activity < 0.005) {
       float alpha = clamp(1.0 - inside * uRevealProgress + innerRim * 0.28, 0.0, 1.0) * uOpacity;
-      vec3 color = mix(vec3(1.0, 0.992, 0.973), vec3(0.025), inside * (1.0 - uRevealProgress) + innerRim);
+      vec3 color = mix(vec3(1.0, 0.992, 0.973), vec3(0.0), inside * (1.0 - uRevealProgress) + innerRim);
       gl_FragColor = vec4(color, alpha);
       return;
     }
@@ -150,7 +151,7 @@ function photoGeometry(index) {
   return geometry
 }
 
-function makeTunnel(root, maskTexture, atlasTexture) {
+function makeTunnel(root, maskTexture, atlasTexture, handoffScale) {
   const hero = root.closest('.landing-hero')
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 760 ? 1.25 : 1.5))
@@ -199,6 +200,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
       uMaskTexture: { value: maskTexture || placeholder },
       uTrailTexture: { value: trailTexture },
       uHasTexture: { value: maskTexture ? 1 : 0 },
+      uEntranceScale: { value: handoffScale },
       uRevealProgress: { value: 0 },
       uProgress: { value: 0 },
       uOpacity: { value: 1 },
@@ -459,9 +461,9 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   return {
     reveal(onComplete) {
       revealTween?.kill()
-      revealTween = gsap.to(maskMaterial.uniforms.uRevealProgress, {
-        value: 1, duration: 0.65, ease: 'power2.inOut', onComplete,
-      })
+      revealTween = gsap.timeline({ onUpdate: () => render(elapsed), onComplete })
+        .to(maskMaterial.uniforms.uEntranceScale, { value: 1, duration: 0.75, ease: 'power2.inOut' })
+        .to(maskMaterial.uniforms.uRevealProgress, { value: 1, duration: 0.85, ease: 'power2.inOut' })
     },
     dispose,
   }
@@ -473,7 +475,7 @@ function makeTunnel(root, maskTexture, atlasTexture) {
   }
 }
 
-export async function mountLandingTunnel(root, signal, onProgress = () => {}) {
+export async function mountLandingTunnel(root, signal, onProgress = () => {}, handoffScale = 0.82) {
   const manager = new THREE.LoadingManager()
   manager.onProgress = (_url, loaded, total) => onProgress(Math.round(loaded / total * 100))
   const [maskTexture, atlasTexture] = await Promise.all([loadTexture(maskUrl, manager), loadTexture(atlasUrl, manager)])
@@ -486,7 +488,7 @@ export async function mountLandingTunnel(root, signal, onProgress = () => {}) {
     atlasTexture?.dispose()
     return null
   }
-  try { return makeTunnel(root, maskTexture, atlasTexture) }
+  try { return makeTunnel(root, maskTexture, atlasTexture, handoffScale) }
   catch (error) {
     maskTexture?.dispose()
     atlasTexture?.dispose()
