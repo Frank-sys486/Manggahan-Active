@@ -382,6 +382,14 @@ function makeTunnel(root, maskTexture, atlasTexture, entranceScale) {
     trailPointer.active = true
   }
   const leave = () => { pointer.x = 0; pointer.y = 0; trailPointer.active = false }
+  const exploreLink = hero.querySelector('.landing-hero__bottom a[href="#sports"]')
+  const exploreCourts = event => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    event.preventDefault()
+    event.stopPropagation()
+    window.history.pushState(null, '', '#sports')
+    lenis.scrollTo('#sports', { duration: 3, easing: t => t * t * (3 - 2 * t) })
+  }
 
   resize()
   lenis = new Lenis({ anchors: true })
@@ -425,6 +433,7 @@ function makeTunnel(root, maskTexture, atlasTexture, entranceScale) {
   window.addEventListener('resize', resize)
   hero.addEventListener('pointermove', move)
   hero.addEventListener('pointerleave', leave)
+  exploreLink?.addEventListener('click', exploreCourts)
   ScrollTrigger.refresh()
   root.classList.add('landing-morph--ready')
 
@@ -442,6 +451,7 @@ function makeTunnel(root, maskTexture, atlasTexture, entranceScale) {
     window.removeEventListener('resize', resize)
     hero.removeEventListener('pointermove', move)
     hero.removeEventListener('pointerleave', leave)
+    exploreLink?.removeEventListener('click', exploreCourts)
     hero.style.removeProperty('opacity')
     hero.style.removeProperty('pointer-events')
     hero.style.removeProperty('--landing-copy')
