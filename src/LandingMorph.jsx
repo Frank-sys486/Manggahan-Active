@@ -6,8 +6,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(MorphSVGPlugin, ScrollTrigger)
 
-const circlePath = 'M300 250 A10 10 0 1 1 299.99 250 Z'
+const circlePath = 'M310 260 A10 10 0 1 1 290 260 A10 10 0 1 1 310 260 Z'
 const glyphPath = 'M64 380 181 132 300 340 431 132 548 380'
+const dotPath = 'M468 64 A36 36 0 1 1 396 64 A36 36 0 1 1 468 64 Z'
+const circleScale = 0.68
 const handoffScale = 0.92
 
 export function LandingGlyph({ className = '' }) {
@@ -18,6 +20,7 @@ export default function LandingMorph() {
   const rootRef = useRef(null)
   const preloaderRef = useRef(null)
   const progressRef = useRef(null)
+  const svgRef = useRef(null)
   const shapeRef = useRef(null)
   const dotRef = useRef(null)
   const [progress, setProgress] = useState(0)
@@ -63,9 +66,11 @@ export default function LandingMorph() {
         })
       } })
         .to(progressRef.current, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
-        .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: 1.5, ease: 'power4.out' }, 0)
-        .to(dotRef.current, { opacity: 1, duration: 0.3, ease: 'power2.out' }, 0.55)
+        .to(svgRef.current, { scale: handoffScale, duration: 1.5, ease: 'sine.inOut' }, 0)
+        .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: 1.5, ease: 'sine.inOut' }, 0)
+        .to(dotRef.current, { morphSVG: dotPath, duration: 1.5, ease: 'sine.inOut' }, 0)
         .set(shapeRef.current, { attr: { d: glyphPath, 'stroke-width': 85 } }, 1.5)
+        .set(dotRef.current, { attr: { d: dotPath } }, 1.5)
         .to({}, { duration: 0.25 })
     }
     const animateProgress = value => {
@@ -128,11 +133,11 @@ export default function LandingMorph() {
 
   return <>
     {loading && createPortal(
-      <div ref={preloaderRef} className="landing-preloader" role="status" aria-label={`Loading Manggahan Active, ${progress}%`} style={{ '--handoff-scale': handoffScale }}>
+      <div ref={preloaderRef} className="landing-preloader" role="status" aria-label={`Loading Manggahan Active, ${progress}%`} style={{ '--circle-scale': circleScale }}>
         <span ref={progressRef} className="landing-preloader__progress" aria-hidden="true">{progress}%</span>
-        <svg viewBox="0 0 600 520" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <svg ref={svgRef} viewBox="0 0 600 520" preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <path ref={shapeRef} d={circlePath} fill="none" stroke="#000" strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" />
-          <circle ref={dotRef} cx="432" cy="64" r="36" fill="#000" opacity="0" />
+          <path ref={dotRef} d={circlePath} fill="#000" />
         </svg>
       </div>, document.body,
     )}
