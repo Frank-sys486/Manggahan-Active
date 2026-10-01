@@ -96,26 +96,39 @@ export default function LandingMorph() {
     const animateProgress = value => {
       if (cancelled || controller.signal.aborted || value <= latestProgress) return
       latestProgress = value
+      const target = value * 0.2
       counterTween?.kill()
       circleTween?.kill()
       circleTween = gsap.to(dotRef.current, {
-        attr: { r: 10 + value * 3.2 },
-        duration: value === 100 ? 0.8 : 0.45,
+        attr: { r: 10 + target * 3.2 },
+        duration: 0.35,
         ease: 'sine.inOut',
-        onComplete: () => {
-          if (value === 100) { circleComplete = true; startMorph() }
-        },
       })
       counterTween = gsap.to(counter, {
-        value,
-        duration: Math.max(0.18, (value - counter.value) * 0.0055),
+        value: target,
+        duration: 0.35,
         ease: 'sine.inOut',
         onUpdate: () => setProgress(Math.floor(counter.value)),
-        onComplete: () => {
-          setProgress(value)
-          if (value === 100) { counterComplete = true; startMorph() }
-        },
       })
+    }
+    const simulateLoading = () => {
+      counterTween?.kill()
+      circleTween?.kill()
+      const stops = [20, 34 + Math.round(Math.random() * 12), 58 + Math.round(Math.random() * 12), 78 + Math.round(Math.random() * 10), 100]
+      counterTween = gsap.timeline({ onComplete: () => {
+        setProgress(100)
+        counterComplete = true
+        circleComplete = true
+        startMorph()
+      } })
+      for (let index = 0; index < stops.length; index++) {
+        const target = stops[index]
+        const previous = index === 0 ? counter.value : stops[index - 1]
+        const duration = Math.max(0.2, (target - previous) * 0.013)
+        const pause = index > 1 ? 0.1 + Math.random() * 0.16 : 0
+        counterTween.to(counter, { value: target, duration, ease: 'sine.inOut', onUpdate: () => setProgress(Math.floor(counter.value)) }, `+=${pause}`)
+          .to(dotRef.current, { attr: { r: 10 + target * 3.2 }, duration, ease: 'sine.inOut' }, '<')
+      }
     }
     failSafe = window.setTimeout(() => {
       controller.abort()
@@ -139,8 +152,7 @@ export default function LandingMorph() {
         cleanup = result.dispose
         sceneReady = true
         window.clearTimeout(failSafe)
-        animateProgress(100)
-        startMorph()
+        simulateLoading()
       })
       .catch(error => {
         console.warn('3D hero unavailable; showing the static M.', error)
