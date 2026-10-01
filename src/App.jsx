@@ -270,19 +270,11 @@ function StatusMark({ status }) {
 
 function LandingOrbit() {
   const sectionRef = useRef(null)
-  const [revealedSport, setRevealedSport] = useState(null)
 
   const explore = index => {
     const court = document.querySelectorAll('.landing-sport')[index]
     court?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' })
     court?.focus({ preventScroll: true })
-  }
-  const activate = index => {
-    if (window.matchMedia('(hover: none)').matches && revealedSport !== index) {
-      setRevealedSport(index)
-      return
-    }
-    explore(index)
   }
 
   useEffect(() => {
@@ -325,7 +317,7 @@ function LandingOrbit() {
         <span className="landing-orbit__cursor" aria-hidden="true">→ Learn more</span>
         <div className="landing-orbit__cards">
           {facilitySeed.map((facility, index) => (
-            <button key={facility.id} className={`landing-orbit__card ${revealedSport === index ? 'is-revealed' : ''}`} type="button" onClick={() => activate(index)} aria-label={`Learn more about ${facility.name}`}>
+            <button key={facility.id} className="landing-orbit__card" type="button" onClick={() => explore(index)} aria-label={`Learn more about ${facility.name}`}>
               <span className="landing-orbit__photo" style={{ '--tile-x': `${index % 3 * 50}%`, '--tile-y': `${Math.floor(index / 3) * 100}%` }} aria-hidden="true" />
               <span className="landing-orbit__label"><SportMark sport={facility.sport} size={26} /><strong>{facility.name}</strong><LineIcon name="arrow" size={19} /></span>
             </button>
@@ -432,7 +424,7 @@ function LandingPage({ onEnter }) {
           <button className="primary-button" type="button" onClick={onEnter}>Get in the game <LineIcon name="arrow" /></button>
         </section>
       </main>
-      <footer className="landing-footer"><span>Manggahan Active / Community sports complex</span><span>Classroom concept · Demo reservations only</span></footer>
+      <footer className="landing-footer"><span>Manggahan Active / Community sports complex</span></footer>
     </div>
   )
 }
@@ -477,7 +469,6 @@ function LoginPage({ onLogin, onBack }) {
           <div><h1 id="login-brand">Manggahan <em>Active</em></h1><p>Community sports complex</p></div>
         </div>
         <div className="login-message"><h2>Your game<br />starts here.</h2><p>Find a court, pick your time, and play together.</p></div>
-        <p className="login-world__note">Classroom prototype · Demo reservations only</p>
       </section>
 
       <section className="login-panel" aria-labelledby="login-heading">
