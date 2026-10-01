@@ -10,7 +10,8 @@ const circlePath = 'M310 260 A10 10 0 1 1 290 260 A10 10 0 1 1 310 260 Z'
 const glyphPath = 'M64 380 181 132 300 340 431 132 548 380'
 const dotPath = 'M468 64 A36 36 0 1 1 396 64 A36 36 0 1 1 468 64 Z'
 const circleScale = 0.68
-const morphDuration = 0.9
+const handoffScale = 0.92
+const morphDuration = 0.8
 
 export function LandingGlyph({ className = '' }) {
   return <svg className={className} viewBox="0 0 600 520" fill="none" aria-hidden="true" focusable="false"><path d="M64 380 181 132 300 340 431 132 548 380" stroke="#0d3c36" strokeWidth="85" strokeLinecap="round" strokeLinejoin="round" /><circle cx="432" cy="64" r="36" fill="#f6b93b" /></svg>
@@ -66,7 +67,7 @@ export default function LandingMorph() {
         })
       } })
         .to(progressRef.current, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
-        .to(svgRef.current, { scale: 1, duration: morphDuration, ease: 'sine.inOut' }, 0)
+        .to(svgRef.current, { scale: handoffScale, duration: morphDuration, ease: 'sine.inOut' }, 0)
         .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: morphDuration, ease: 'sine.inOut' }, 0)
         .to(dotRef.current, { morphSVG: dotPath, duration: morphDuration, ease: 'sine.inOut' }, 0)
         .set(shapeRef.current, { attr: { d: glyphPath, 'stroke-width': 85 } }, morphDuration)
@@ -98,7 +99,7 @@ export default function LandingMorph() {
     }, 8000)
 
     import('./LandingTunnelScene.js')
-      .then(({ mountLandingTunnel }) => controller.signal.aborted ? null : mountLandingTunnel(root, controller.signal, animateProgress))
+      .then(({ mountLandingTunnel }) => controller.signal.aborted ? null : mountLandingTunnel(root, controller.signal, animateProgress, handoffScale))
       .then(result => {
         if (!result || cancelled) {
           result?.dispose()
