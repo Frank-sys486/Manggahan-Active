@@ -6,7 +6,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
 
 const glyphPath = 'M64 380 181 132 300 340 431 132 548 380'
-const circleScale = 0.68
 const handoffScale = 0.92
 
 export function LandingGlyph({ className = '' }) {
@@ -17,7 +16,6 @@ export default function LandingMorph() {
   const rootRef = useRef(null)
   const preloaderRef = useRef(null)
   const progressRef = useRef(null)
-  const svgRef = useRef(null)
   const shapeRef = useRef(null)
   const dotRef = useRef(null)
   const orbitRef = useRef(null)
@@ -71,12 +69,12 @@ export default function LandingMorph() {
         })
       } })
         .to(progressRef.current, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
-        .to(svgRef.current, { scale: handoffScale, duration: 0.75, ease: 'sine.inOut' }, 0)
-        .to(dotRef.current, { attr: { cx: 75, cy: 290, r: 65 }, duration: 0.28, ease: 'power2.inOut' }, 0)
-        .to(shapeRef.current, { opacity: 1, duration: 0.22, ease: 'power2.out' }, 0.1)
-        .to(orbit, { progress: 1, duration: 0.65, ease: 'power2.inOut', onUpdate: followOrbit }, 0.28)
-        .to(dotRef.current, { attr: { r: 36 }, duration: 0.65, ease: 'sine.inOut' }, 0.28)
-        .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36 } }, 0.93)
+        .set(shapeRef.current, { opacity: 1 }, 0)
+        .to(dotRef.current, { attr: { cx: 75, cy: 290 }, duration: 0.4, ease: 'power2.inOut' }, 0)
+        .to(dotRef.current, { attr: { r: 65 }, duration: 0.22, ease: 'power2.inOut' }, 0.18)
+        .to(orbit, { progress: 1, duration: 0.63, ease: 'power2.inOut', onUpdate: followOrbit }, 0.4)
+        .to(dotRef.current, { attr: { r: 36 }, duration: 0.63, ease: 'sine.inOut' }, 0.4)
+        .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36 } }, 1.03)
     }
     const animateProgress = value => {
       if (cancelled || controller.signal.aborted || value <= latestProgress) return
@@ -84,11 +82,11 @@ export default function LandingMorph() {
       counterTween?.kill()
       counterTween = gsap.to(counter, {
         value,
-        duration: Math.max(0.1, (value - counter.value) * 0.0025),
-        ease: 'none',
+        duration: Math.max(0.18, (value - counter.value) * 0.0055),
+        ease: 'sine.inOut',
         onUpdate: () => {
           setProgress(Math.floor(counter.value))
-          dotRef.current?.setAttribute('r', 10 + counter.value * 0.7)
+          dotRef.current?.setAttribute('r', 10 + counter.value * 3.2)
         },
         onComplete: () => {
           setProgress(value)
@@ -141,9 +139,9 @@ export default function LandingMorph() {
 
   return <>
     {loading && createPortal(
-      <div ref={preloaderRef} className="landing-preloader" role="status" aria-label={`Loading Manggahan Active, ${progress}%`} style={{ '--circle-scale': circleScale }}>
+      <div ref={preloaderRef} className="landing-preloader" role="status" aria-label={`Loading Manggahan Active, ${progress}%`} style={{ '--circle-scale': handoffScale }}>
         <span ref={progressRef} className="landing-preloader__progress" aria-hidden="true">{progress}%</span>
-        <svg ref={svgRef} viewBox="0 0 600 520" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <svg viewBox="0 0 600 520" preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <path ref={shapeRef} d={glyphPath} fill="none" stroke="#000" strokeWidth="85" strokeLinecap="round" strokeLinejoin="round" opacity="0" />
           <circle ref={dotRef} cx="300" cy="260" r="10" fill="#000" />
           <path ref={orbitRef} d="M75 290 C5 260 20 100 130 44 C185 5 290 -30 432 64" fill="none" stroke="none" />
