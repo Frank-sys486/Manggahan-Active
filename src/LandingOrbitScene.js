@@ -78,33 +78,33 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     }
     return geometry
   })
-  // Stable, asymmetric targets stay discoverable while the camera follows the pointer.
-  const placements = [
-    [-0.68, 5.8, 10.8, 3.0, -0.11],
-    [0.57, 4.7, 13.3, 3.5, 0.08],
-    [-0.8, 0.3, 14.2, 3.4, 0.12],
-    [0.75, -1.1, 10.7, 3.0, -0.06],
-    [-0.52, -5.4, 11.9, 3.2, 0.1],
-    [0.87, -6.3, 13.7, 3.4, -0.08],
-  ]
-  const planes = sports.map((_, index) => {
-    const [angle, height, radius, size, tilt] = placements[index]
-    const plane = new THREE.Mesh(geometries[index], new THREE.MeshBasicMaterial({
-      map: texture, transparent: true, opacity: 0, depthWrite: false, toneMapped: false,
+  // Six staggered rows fill the taller cylinder; each card faces inward.
+  const planes = Array.from({ length: 108 }, (_, index) => {
+    const sport = index < sports.length ? index : Math.floor(Math.random() * sports.length)
+    const row = Math.floor(index / 18)
+    const foreground = index % 3 === 0
+    const radius = foreground ? 9.5 + Math.random() * 2 : 14 + Math.random() * 3
+    const restingOpacity = foreground ? 0.55 : 0.38
+    const plane = new THREE.Mesh(geometries[sport], new THREE.MeshBasicMaterial({
+      map: texture, transparent: true, opacity: restingOpacity, depthWrite: false, toneMapped: false,
       side: THREE.DoubleSide,
     }))
-    const backing = new THREE.Mesh(geometries[index], new THREE.MeshBasicMaterial({ color: '#020d0b', side: THREE.DoubleSide }))
-    backing.position.z = -0.03
-    plane.add(backing)
-    plane.userData = { sport: index, size }
+    plane.userData = {
+      sport,
+      angle: ((index % 18 + row % 2 * 0.5 + (Math.random() - 0.5) * 0.25) / 18) * Math.PI * 2,
+      height: (row - 2.5) * 4.5 + (Math.random() - 0.5) * 0.5,
+      radius,
+      restingOpacity,
+      size: (foreground ? 3 : 3.7) + Math.random() * 0.6,
+    }
     plane.position.set(
-      Math.sin(angle) * radius,
-      height,
-      -Math.cos(angle) * radius,
+      Math.sin(plane.userData.angle) * plane.userData.radius,
+      plane.userData.height,
+      -Math.cos(plane.userData.angle) * plane.userData.radius,
     )
-    plane.lookAt(0, height, 0)
-    plane.rotateZ(tilt)
-    plane.scale.setScalar(size)
+    plane.lookAt(0, plane.userData.height, 0)
+    plane.rotateZ((Math.random() - 0.5) * 0.12)
+    plane.scale.setScalar(plane.userData.size)
     scene.add(plane)
     return plane
   })
@@ -113,7 +113,6 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
   const cursorX = gsap.quickTo(cursor, 'x', { duration: 0.11, ease: 'power3.out' })
   const cursorY = gsap.quickTo(cursor, 'y', { duration: 0.11, ease: 'power3.out' })
   let hovered = null
-  let hoverMiss = 0
   let pointerInside = false
   let cursorEnabled = false
   let visible = false
@@ -123,16 +122,16 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     if (plane === hovered) return
     if (hovered) gsap.to(hovered.scale, {
       x: hovered.userData.size, y: hovered.userData.size, z: hovered.userData.size,
-      duration: 0.22, ease: 'power2.out', overwrite: true,
+      duration: 0.2, ease: 'power2.out', overwrite: true,
     })
     hovered = plane
     if (plane) gsap.to(plane.scale, {
-      x: plane.userData.size * 1.08, y: plane.userData.size * 1.08, z: plane.userData.size * 1.08,
-      duration: 0.3, ease: 'power3.out', overwrite: true,
+      x: plane.userData.size * 1.14, y: plane.userData.size * 1.14, z: plane.userData.size * 1.14,
+      duration: 0.22, ease: 'back.out(1.4)', overwrite: true,
     })
     planes.forEach(item => gsap.to(item.material, {
-      opacity: item === plane ? 1 : 0,
-      duration: item === plane ? 0.3 : 0.2, ease: 'power2.out', overwrite: true,
+      opacity: !plane ? item.userData.restingOpacity : item === plane ? 1 : 0.08,
+      duration: 0.18, ease: 'power2.out', overwrite: true,
     }))
     gsap.to(logo, { autoAlpha: plane ? 0 : 1, scale: plane ? 0.9 : 1, delay: plane ? 0.15 : 0, duration: 0.18, overwrite: true })
     gsap.killTweensOf(title)
@@ -174,7 +173,6 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     if (event?.pointerType === 'touch') return
     pointerInside = false
     cursorEnabled = false
-    hoverMiss = 0
     pointer.set(0, 0)
     highlight(null)
   }
@@ -215,13 +213,9 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     camera.position.x += (sideways * Math.cos(camera.rotation.y) - camera.position.x) * ease
     camera.position.z += (-sideways * Math.sin(camera.rotation.y) - camera.position.z) * ease
     camera.position.y += ((pointerInside ? pointer.y * 6 : 0) - camera.position.y) * ease
-    if (pointerInside) {
-      const hit = pick()
-      if (hit) { hoverMiss = 0; highlight(hit) }
-      else if ((hoverMiss += delta) > 90) highlight(null)
-    }
+    if (pointerInside) highlight(pick())
     blurPass.uniforms.uVelocity.value.set(
-      THREE.MathUtils.clamp((camera.rotation.y - previousCameraYaw) * 0.05 + (camera.position.x - previousCameraPosition.x) * 0.008, -0.012, 0.012),
+      THREE.MathUtils.clamp((camera.rotation.y - previousCameraYaw) * 0.08 + (camera.position.x - previousCameraPosition.x) * 0.012, -0.018, 0.018),
       THREE.MathUtils.clamp((camera.position.y - previousCameraPosition.y) * 0.008, -0.012, 0.012),
     )
     previousCameraPosition.copy(camera.position)
@@ -249,7 +243,7 @@ export async function mountLandingOrbit(host, sports, onSelect, signal) {
     cursorX.tween.kill()
     cursorY.tween.kill()
     geometries.forEach(geometry => geometry.dispose())
-    planes.forEach(plane => { plane.material.dispose(); plane.children[0].material.dispose() })
+    planes.forEach(plane => plane.material.dispose())
     wallGeometry.dispose()
     wallMaterial.dispose()
     rimGeometry.dispose()
