@@ -1,17 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap } from 'gsap'
-import MorphSVGPlugin from 'gsap/MorphSVGPlugin'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-gsap.registerPlugin(MorphSVGPlugin, ScrollTrigger)
+gsap.registerPlugin(ScrollTrigger)
 
-const circlePath = 'M310 260 A10 10 0 1 1 290 260 A10 10 0 1 1 310 260 Z'
 const glyphPath = 'M64 380 181 132 300 340 431 132 548 380'
-const dotPath = 'M468 64 A36 36 0 1 1 396 64 A36 36 0 1 1 468 64 Z'
 const circleScale = 0.68
 const handoffScale = 0.92
-const morphDuration = 0.8
 
 export function LandingGlyph({ className = '' }) {
   return <svg className={className} viewBox="0 0 600 520" fill="none" aria-hidden="true" focusable="false"><path d="M64 380 181 132 300 340 431 132 548 380" stroke="#0d3c36" strokeWidth="85" strokeLinecap="round" strokeLinejoin="round" /><circle cx="432" cy="64" r="36" fill="#f6b93b" /></svg>
@@ -24,6 +20,7 @@ export default function LandingMorph() {
   const svgRef = useRef(null)
   const shapeRef = useRef(null)
   const dotRef = useRef(null)
+  const orbitRef = useRef(null)
   const [progress, setProgress] = useState(0)
   const [loading, setLoading] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
 
@@ -57,6 +54,13 @@ export default function LandingMorph() {
     const startMorph = () => {
       if (!sceneReady || !counterComplete || introStarted || cancelled) return
       introStarted = true
+      const orbit = { progress: 0 }
+      const orbitLength = orbitRef.current.getTotalLength()
+      const followOrbit = () => {
+        const point = orbitRef.current.getPointAtLength(orbit.progress * orbitLength)
+        dotRef.current.setAttribute('cx', point.x)
+        dotRef.current.setAttribute('cy', point.y)
+      }
       morph = gsap.timeline({ onComplete: () => {
         handoff = gsap.to(preloaderRef.current, {
           opacity: 0, duration: 0.1, ease: 'power2.out',
@@ -67,11 +71,12 @@ export default function LandingMorph() {
         })
       } })
         .to(progressRef.current, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
-        .to(svgRef.current, { scale: handoffScale, duration: morphDuration, ease: 'sine.inOut' }, 0)
-        .to(shapeRef.current, { morphSVG: glyphPath, attr: { 'stroke-width': 85 }, duration: morphDuration, ease: 'sine.inOut' }, 0)
-        .to(dotRef.current, { morphSVG: dotPath, duration: morphDuration, ease: 'sine.inOut' }, 0)
-        .set(shapeRef.current, { attr: { d: glyphPath, 'stroke-width': 85 } }, morphDuration)
-        .set(dotRef.current, { attr: { d: dotPath } }, morphDuration)
+        .to(svgRef.current, { scale: handoffScale, duration: 0.75, ease: 'sine.inOut' }, 0)
+        .to(dotRef.current, { attr: { cx: 75, cy: 290, r: 65 }, duration: 0.28, ease: 'power2.inOut' }, 0)
+        .to(shapeRef.current, { opacity: 1, duration: 0.22, ease: 'power2.out' }, 0.1)
+        .to(orbit, { progress: 1, duration: 0.65, ease: 'power2.inOut', onUpdate: followOrbit }, 0.28)
+        .to(dotRef.current, { attr: { r: 36 }, duration: 0.65, ease: 'sine.inOut' }, 0.28)
+        .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36 } }, 0.93)
     }
     const animateProgress = value => {
       if (cancelled || controller.signal.aborted || value <= latestProgress) return
@@ -81,7 +86,10 @@ export default function LandingMorph() {
         value,
         duration: Math.max(0.1, (value - counter.value) * 0.0025),
         ease: 'none',
-        onUpdate: () => setProgress(Math.floor(counter.value)),
+        onUpdate: () => {
+          setProgress(Math.floor(counter.value))
+          dotRef.current?.setAttribute('r', 10 + counter.value * 0.7)
+        },
         onComplete: () => {
           setProgress(value)
           if (value === 100) { counterComplete = true; startMorph() }
@@ -136,8 +144,9 @@ export default function LandingMorph() {
       <div ref={preloaderRef} className="landing-preloader" role="status" aria-label={`Loading Manggahan Active, ${progress}%`} style={{ '--circle-scale': circleScale }}>
         <span ref={progressRef} className="landing-preloader__progress" aria-hidden="true">{progress}%</span>
         <svg ref={svgRef} viewBox="0 0 600 520" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-          <path ref={shapeRef} d={circlePath} fill="none" stroke="#000" strokeWidth="20" strokeLinecap="round" strokeLinejoin="round" />
-          <path ref={dotRef} d={circlePath} fill="#000" />
+          <path ref={shapeRef} d={glyphPath} fill="none" stroke="#000" strokeWidth="85" strokeLinecap="round" strokeLinejoin="round" opacity="0" />
+          <circle ref={dotRef} cx="300" cy="260" r="10" fill="#000" />
+          <path ref={orbitRef} d="M75 290 C5 260 20 100 130 44 C185 5 290 -30 432 64" fill="none" stroke="none" />
         </svg>
       </div>, document.body,
     )}
