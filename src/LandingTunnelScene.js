@@ -462,8 +462,8 @@ function makeTunnel(root, maskTexture, atlasTexture, handoffScale) {
     reveal(onComplete) {
       revealTween?.kill()
       revealTween = gsap.timeline({ onUpdate: () => render(elapsed), onComplete })
-        .to(maskMaterial.uniforms.uEntranceScale, { value: 1, duration: 0.75, ease: 'power4.out' })
-        .to(maskMaterial.uniforms.uRevealProgress, { value: 1, duration: 0.85, ease: 'power2.inOut' })
+        .to(maskMaterial.uniforms.uEntranceScale, { value: 1, duration: 0.2, ease: 'power4.out' })
+        .to(maskMaterial.uniforms.uRevealProgress, { value: 1, duration: 0.3, ease: 'power2.inOut' })
     },
     dispose,
   }
