@@ -18,7 +18,7 @@ export default function LandingMorph() {
   const progressRef = useRef(null)
   const shapeRef = useRef(null)
   const dotRef = useRef(null)
-  const orbitRef = useRef(null)
+  const backDotRef = useRef(null)
   const [progress, setProgress] = useState(0)
   const [loading, setLoading] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
 
@@ -56,11 +56,26 @@ export default function LandingMorph() {
       if (!sceneReady || !counterComplete || !circleComplete || introStarted || cancelled) return
       introStarted = true
       const orbit = { progress: 0 }
-      const orbitLength = orbitRef.current.getTotalLength()
       const followOrbit = () => {
-        const point = orbitRef.current.getPointAtLength(orbit.progress * orbitLength)
-        dotRef.current.setAttribute('cx', point.x)
-        dotRef.current.setAttribute('cy', point.y)
+        const phase = orbit.progress
+        const angle = (85.44326273 + phase * 288.3120367) * Math.PI / 180
+        const tilt = -35 * Math.PI / 180
+        const x = 220 + 247.287279 * Math.cos(angle) * Math.cos(tilt) - 111.771572 * Math.sin(angle) * Math.sin(tilt)
+        const y = 180 + 247.287279 * Math.cos(angle) * Math.sin(tilt) + 111.771572 * Math.sin(angle) * Math.cos(tilt)
+        const depth = phase < 0.64 ? phase / 0.64 : (phase - 0.64) / 0.36
+        const easedDepth = depth * depth * (3 - 2 * depth)
+        const radius = phase < 0.64 ? 330 - 310 * easedDepth : 20 + 16 * easedDepth
+        const smoothstep = (start, end) => {
+          const t = Math.max(0, Math.min(1, (phase - start) / (end - start)))
+          return t * t * (3 - 2 * t)
+        }
+        const frontOpacity = 1 - smoothstep(0.52, 0.6) + smoothstep(0.89, 0.97)
+        for (const circle of [dotRef.current, backDotRef.current]) {
+          circle.setAttribute('cx', x)
+          circle.setAttribute('cy', y)
+          circle.setAttribute('r', radius)
+        }
+        dotRef.current.setAttribute('opacity', frontOpacity)
       }
       morph = gsap.timeline({ onComplete: () => {
         handoff = gsap.to(preloaderRef.current, {
@@ -73,11 +88,10 @@ export default function LandingMorph() {
       } })
         .to(progressRef.current, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
         .set(shapeRef.current, { opacity: 1 }, 0)
-        .to(dotRef.current, { attr: { cx: 75, cy: 290 }, duration: 0.8, ease: 'power2.inOut' }, 0)
-        .to(dotRef.current, { attr: { r: 65 }, duration: 0.8, ease: 'sine.inOut' }, 0)
-        .to(orbit, { progress: 1, duration: 0.8, ease: 'power2.inOut', onUpdate: followOrbit }, 0.8)
-        .to(dotRef.current, { attr: { r: 36 }, duration: 0.8, ease: 'sine.inOut' }, 0.8)
-        .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36 } }, 1.6)
+        .set(backDotRef.current, { attr: { opacity: 1 } }, 0)
+        .to(orbit, { progress: 1, duration: 1.6, ease: 'sine.inOut', onUpdate: followOrbit }, 0)
+        .set(dotRef.current, { attr: { cx: 432, cy: 64, r: 36, opacity: 1 } }, 1.6)
+        .set(backDotRef.current, { attr: { opacity: 0 } }, 1.6)
     }
     const animateProgress = value => {
       if (cancelled || controller.signal.aborted || value <= latestProgress) return
@@ -152,9 +166,9 @@ export default function LandingMorph() {
       <div ref={preloaderRef} className="landing-preloader" role="status" aria-label={`Loading Manggahan Active, ${progress}%`} style={{ '--circle-scale': handoffScale }}>
         <span ref={progressRef} className="landing-preloader__progress" aria-hidden="true">{progress}%</span>
         <svg viewBox="0 0 600 520" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <circle ref={backDotRef} cx="300" cy="260" r="10" fill="#000" opacity="0" />
           <path ref={shapeRef} d={glyphPath} fill="none" stroke="#000" strokeWidth="85" strokeLinecap="round" strokeLinejoin="round" opacity="0" />
           <circle ref={dotRef} cx="300" cy="260" r="10" fill="#000" />
-          <path ref={orbitRef} d="M75 290 C-80 250 -100 90 95 10 C290 -70 355 -40 432 64" fill="none" stroke="none" />
         </svg>
       </div>, document.body,
     )}
