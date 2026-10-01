@@ -1,18 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg">
-  <symbol id="react" viewBox="0 0 100 100">
-    <g fill="none" stroke="#61dafb" stroke-width="3.5"><ellipse cx="50" cy="50" rx="42" ry="16"/><ellipse cx="50" cy="50" rx="42" ry="16" transform="rotate(60 50 50)"/><ellipse cx="50" cy="50" rx="42" ry="16" transform="rotate(120 50 50)"/></g><circle cx="50" cy="50" r="7" fill="#61dafb"/>
-  </symbol>
-  <symbol id="javascript" viewBox="0 0 100 100">
-    <rect x="6" y="6" width="88" height="88" fill="#f7df1e"/><text x="47" y="79" fill="#000" font-family="Arial,sans-serif" font-size="48" font-weight="900" text-anchor="middle">JS</text>
-  </symbol>
   <symbol id="html" viewBox="0 0 100 100">
     <path d="M11 8h78l-7 76-32 9-32-9z" fill="#e44d26"/><path d="M50 87V14h32l-6 65z" fill="#f16529"/><path d="M27 29h47l-1 10H39l1 10h32l-3 25-19 5-19-5-2-13h11l1 6 9 3 9-3 1-9H30z" fill="#fff"/>
   </symbol>
   <symbol id="css" viewBox="0 0 100 100">
     <path d="M11 8h78l-7 76-32 9-32-9z" fill="#1572b6"/><path d="M50 87V14h32l-6 65z" fill="#33a9dc"/><path d="M27 29h47l-1 10H39l1 10h32l-3 25-19 5-19-5-2-13h11l1 6 9 3 9-3 1-9H30z" fill="#fff"/>
   </symbol>
-  <symbol id="storage" viewBox="0 0 100 100">
-    <g fill="none" stroke="#f6b93b" stroke-width="6"><ellipse cx="50" cy="22" rx="35" ry="13"/><path d="M15 22v54c0 7 16 13 35 13s35-6 35-13V22M15 49c0 7 16 13 35 13s35-6 35-13"/></g>
+  <symbol id="javascript" viewBox="0 0 100 100">
+    <rect x="6" y="6" width="88" height="88" fill="#f7df1e"/><text x="47" y="79" fill="#000" font-family="Arial,sans-serif" font-size="48" font-weight="900" text-anchor="middle">JS</text>
+  </symbol>
+  <symbol id="react" viewBox="0 0 100 100">
+    <g fill="none" stroke="#61dafb" stroke-width="3.5"><ellipse cx="50" cy="50" rx="42" ry="16"/><ellipse cx="50" cy="50" rx="42" ry="16" transform="rotate(60 50 50)"/><ellipse cx="50" cy="50" rx="42" ry="16" transform="rotate(120 50 50)"/></g><circle cx="50" cy="50" r="7" fill="#61dafb"/>
   </symbol>
   <symbol id="three" viewBox="0 0 100 100">
     <g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round"><path d="M10 8 90 47 10 92zM10 8l27 50 53-11M10 92l27-34L10 42M37 58l27-23-54 7"/></g>
@@ -34,5 +31,8 @@
   </symbol>
   <symbol id="eslint" viewBox="0 0 100 100">
     <path d="M33 6h34l27 44-27 44H33L6 50z" fill="#4b32c3"/><path d="M39 23h22l17 27-17 27H39L22 50z" fill="#8080f2"/><path d="M45 35h10l10 15-10 15H45L35 50z" fill="#4b32c3"/>
+  </symbol>
+  <symbol id="storage" viewBox="0 0 100 100">
+    <g fill="none" stroke="#f6b93b" stroke-width="6"><ellipse cx="50" cy="22" rx="35" ry="13"/><path d="M15 22v54c0 7 16 13 35 13s35-6 35-13V22M15 49c0 7 16 13 35 13s35-6 35-13"/></g>
   </symbol>
 </svg>
